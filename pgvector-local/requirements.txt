@@ -1,0 +1,12 @@
+# To install: pip install -r requirements.txt
+
+fastapi
+langchain-community
+langchain-openai
+langchain-text-splitters
+psycopg2-binary
+pydantic
+pypdf
+python-dotenv
+unstructured
+uvicorn
