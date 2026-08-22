@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "dotenv": "^17.2.1",
-    "firebase": "^11.0.1"
-  }
-  ,
-  "type": "module"
-}
