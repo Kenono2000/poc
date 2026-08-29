@@ -1,0 +1,7 @@
+Priority,Folder_Path,Size_GB,Relocation_Method,Risk_Level,Estimated_Savings_MB
+HIGH,C:\Users\Ken Wong\AppData\Local\Programs,8.3,Manual move + Update app settings,MEDIUM-HIGH - Apps may need path updates,8501.23
+HIGH,C:\Users\Ken Wong\.gradle,8.26,Manual move + Create symbolic link (mklink /D),MEDIUM - Review before relocating,8455.01
+HIGH,C:\Users\Ken Wong\AppData\Local\Google\Chrome\User Data,6.82,Manual move + Update app settings,MEDIUM-HIGH - Apps may need path updates,6982.93
+MEDIUM,C:\Users\Ken Wong\Downloads,4.14,Windows Location Tab (Right-click folder → Properties → Location),LOW - Safe to relocate,4242.51
+MEDIUM,C:\Users\Ken Wong\.cache,3.88,Manual move + Create symbolic link (mklink /D),MEDIUM - May require reconfiguration,3969.14
+MEDIUM,C:\Users\Ken Wong\.nuget,1.52,Manual move + Create symbolic link (mklink /D),MEDIUM - Review before relocating,1556.0

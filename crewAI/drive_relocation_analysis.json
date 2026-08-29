@@ -1,0 +1,379 @@
+{
+  "timestamp": "2026-08-29T14:51:57.248712",
+  "source_drive": "C:",
+  "target_drive": "D:",
+  "username": "Ken Wong",
+  "user_profile": "C:\\Users\\Ken Wong",
+  "source_drive_info": {
+    "drive": "C:",
+    "total_gb": 476.1,
+    "used_gb": 356.86,
+    "free_gb": 119.24,
+    "percent_used": 75.0
+  },
+  "target_drive_info": {
+    "drive": "D:",
+    "total_gb": 238.2,
+    "used_gb": 112.62,
+    "free_gb": 125.58,
+    "percent_used": 47.3
+  },
+  "relocatable_folders": [
+    {
+      "path": "C:\\Users\\Ken Wong\\Downloads",
+      "size_mb": 4242.51,
+      "size_gb": 4.14,
+      "file_count": 29956,
+      "relocatable": true,
+      "relocation_method": "Windows Location Tab (Right-click folder → Properties → Location)",
+      "risk_level": "LOW - Safe to relocate"
+    },
+    {
+      "path": "C:\\Users\\Ken Wong\\AppData\\Local\\Programs",
+      "size_mb": 8501.23,
+      "size_gb": 8.3,
+      "file_count": 173398,
+      "relocatable": true,
+      "relocation_method": "Manual move + Update app settings",
+      "risk_level": "MEDIUM-HIGH - Apps may need path updates"
+    },
+    {
+      "path": "C:\\Users\\Ken Wong\\.cache",
+      "size_mb": 3969.14,
+      "size_gb": 3.88,
+      "file_count": 35039,
+      "relocatable": true,
+      "relocation_method": "Manual move + Create symbolic link (mklink /D)",
+      "risk_level": "MEDIUM - May require reconfiguration"
+    },
+    {
+      "path": "C:\\Users\\Ken Wong\\.nuget",
+      "size_mb": 1556.0,
+      "size_gb": 1.52,
+      "file_count": 16775,
+      "relocatable": true,
+      "relocation_method": "Manual move + Create symbolic link (mklink /D)",
+      "risk_level": "MEDIUM - Review before relocating"
+    },
+    {
+      "path": "C:\\Users\\Ken Wong\\.gradle",
+      "size_mb": 8455.01,
+      "size_gb": 8.26,
+      "file_count": 182498,
+      "relocatable": true,
+      "relocation_method": "Manual move + Create symbolic link (mklink /D)",
+      "risk_level": "MEDIUM - Review before relocating"
+    },
+    {
+      "path": "C:\\Users\\Ken Wong\\AppData\\Local\\Google\\Chrome\\User Data",
+      "size_mb": 6982.93,
+      "size_gb": 6.82,
+      "file_count": 18909,
+      "relocatable": true,
+      "relocation_method": "Manual move + Update app settings",
+      "risk_level": "MEDIUM-HIGH - Apps may need path updates"
+    }
+  ],
+  "large_files": [
+    {
+      "path": "C:\\pagefile.sys",
+      "size_mb": 17408.0,
+      "size_gb": 17.0
+    },
+    {
+      "path": "C:\\hiberfil.sys",
+      "size_mb": 13042.02,
+      "size_gb": 12.74
+    },
+    {
+      "path": "C:\\Android\\Sdk\\system-images\\android-37.1\\google_apis_playstore_ps16k\\x86_64\\system.img",
+      "size_mb": 8203.0,
+      "size_gb": 8.01
+    },
+    {
+      "path": "C:\\Android\\Sdk\\system-images\\android-34\\google_apis\\x86_64\\system.img",
+      "size_mb": 4107.0,
+      "size_gb": 4.01
+    },
+    {
+      "path": "C:\\Android\\Sdk\\system-images\\android-36\\google_apis_playstore\\x86_64\\system.img",
+      "size_mb": 2225.0,
+      "size_gb": 2.17
+    },
+    {
+      "path": "C:\\Program Files\\Docker\\Docker\\resources\\wsl\\docker-wsl-cli.iso",
+      "size_mb": 780.44,
+      "size_gb": 0.76
+    },
+    {
+      "path": "C:\\Program Files\\Docker\\Docker.backup\\resources\\wsl\\docker-wsl-cli.iso",
+      "size_mb": 780.16,
+      "size_gb": 0.76
+    },
+    {
+      "path": "C:\\Program Files\\Docker\\Docker.backup\\resources\\docker-desktop.iso",
+      "size_mb": 747.18,
+      "size_gb": 0.73
+    },
+    {
+      "path": "C:\\Program Files\\Docker\\Docker\\resources\\docker-desktop.iso",
+      "size_mb": 742.06,
+      "size_gb": 0.72
+    },
+    {
+      "path": "C:\\flutter\\.git\\objects\\pack\\pack-b4abc23279ae6e2d0327409173adb9c554c2a18c.pack",
+      "size_mb": 362.19,
+      "size_gb": 0.35
+    },
+    {
+      "path": "C:\\Program Files\\Epic Games\\Launcher\\Portal\\Extras\\EOS\\EpicOnlineServicesInstaller.exe",
+      "size_mb": 290.35,
+      "size_gb": 0.28
+    },
+    {
+      "path": "C:\\flutter\\bin\\cache\\artifacts\\engine\\windows-x64\\flutter_windows.dll.pdb",
+      "size_mb": 259.18,
+      "size_gb": 0.25
+    },
+    {
+      "path": "C:\\flutter\\bin\\cache\\artifacts\\engine\\windows-x64-profile\\flutter_windows.dll.pdb",
+      "size_mb": 239.86,
+      "size_gb": 0.23
+    },
+    {
+      "path": "C:\\flutter\\bin\\cache\\artifacts\\engine\\windows-x64-release\\flutter_windows.dll.pdb",
+      "size_mb": 235.02,
+      "size_gb": 0.23
+    },
+    {
+      "path": "C:\\Program Files\\Docker\\Docker\\frontend\\Docker Desktop.exe",
+      "size_mb": 221.67,
+      "size_gb": 0.22
+    },
+    {
+      "path": "C:\\Program Files\\Epic Games\\Launcher\\Portal\\Extras\\Overlay\\Win32\\libcef.dll",
+      "size_mb": 198.62,
+      "size_gb": 0.19
+    },
+    {
+      "path": "C:\\Program Files\\Docker\\cli-plugins\\docker-scout.exe",
+      "size_mb": 191.97,
+      "size_gb": 0.19
+    },
+    {
+      "path": "C:\\Program Files\\Docker\\Docker\\resources\\cli-plugins\\docker-scout.exe",
+      "size_mb": 191.97,
+      "size_gb": 0.19
+    },
+    {
+      "path": "C:\\Program Files\\Docker\\Docker.backup\\resources\\cli-plugins\\docker-scout.exe",
+      "size_mb": 191.97,
+      "size_gb": 0.19
+    },
+    {
+      "path": "C:\\flutter\\bin\\cache\\artifacts\\engine\\android-arm64\\flutter.jar",
+      "size_mb": 163.66,
+      "size_gb": 0.16
+    },
+    {
+      "path": "C:\\Program Files\\EA\\AC\\EAAntiCheat.Installer.exe",
+      "size_mb": 161.7,
+      "size_gb": 0.16
+    },
+    {
+      "path": "C:\\OneDriveTemp\\S-1-5-21-3534448761-3701314345-1667271037-1000\\{0C4FD6E9-2185-43A6-8207-B029D764FF4F}.vhdx",
+      "size_mb": 151.0,
+      "size_gb": 0.15
+    },
+    {
+      "path": "C:\\Program Files\\Docker\\Docker.backup\\resources\\com.docker.backend.exe",
+      "size_mb": 146.17,
+      "size_gb": 0.14
+    },
+    {
+      "path": "C:\\Program Files\\Docker\\Docker\\resources\\com.docker.backend.exe",
+      "size_mb": 146.03,
+      "size_gb": 0.14
+    },
+    {
+      "path": "C:\\Program Files\\Epic Games\\Launcher\\Engine\\Binaries\\ThirdParty\\CEF3\\Win64\\libcef.dll",
+      "size_mb": 146.03,
+      "size_gb": 0.14
+    },
+    {
+      "path": "C:\\Android\\Sdk\\ndk\\27.0.12077973\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe",
+      "size_mb": 120.81,
+      "size_gb": 0.12
+    },
+    {
+      "path": "C:\\Android\\Sdk\\ndk\\27.0.12077973\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang-cl.exe",
+      "size_mb": 120.81,
+      "size_gb": 0.12
+    },
+    {
+      "path": "C:\\Android\\Sdk\\ndk\\27.0.12077973\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang.exe",
+      "size_mb": 120.81,
+      "size_gb": 0.12
+    },
+    {
+      "path": "C:\\Android\\Sdk\\ndk\\27.1.12297006\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe",
+      "size_mb": 120.81,
+      "size_gb": 0.12
+    },
+    {
+      "path": "C:\\Android\\Sdk\\ndk\\27.1.12297006\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang-cl.exe",
+      "size_mb": 120.81,
+      "size_gb": 0.12
+    },
+    {
+      "path": "C:\\Android\\Sdk\\ndk\\27.1.12297006\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang.exe",
+      "size_mb": 120.81,
+      "size_gb": 0.12
+    },
+    {
+      "path": "C:\\Android\\Sdk\\emulator\\lib64\\qt\\lib\\Qt6WebEngineCoreAndroidEmu.dll",
+      "size_mb": 116.19,
+      "size_gb": 0.11
+    },
+    {
+      "path": "C:\\Android\\Sdk\\system-images\\android-37.1\\google_apis_playstore_ps16k\\x86_64\\vendor.img",
+      "size_mb": 113.0,
+      "size_gb": 0.11
+    },
+    {
+      "path": "C:\\Android\\Sdk\\ndk\\27.0.12077973\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\liblldb.dll",
+      "size_mb": 112.54,
+      "size_gb": 0.11
+    },
+    {
+      "path": "C:\\Android\\Sdk\\ndk\\27.0.12077973\\toolchains\\llvm\\prebuilt\\windows-x86_64\\lib\\python3.11\\site-packages\\lldb\\_lldb.exe",
+      "size_mb": 112.54,
+      "size_gb": 0.11
+    },
+    {
+      "path": "C:\\Android\\Sdk\\ndk\\27.1.12297006\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\liblldb.dll",
+      "size_mb": 112.54,
+      "size_gb": 0.11
+    },
+    {
+      "path": "C:\\Android\\Sdk\\ndk\\27.1.12297006\\toolchains\\llvm\\prebuilt\\windows-x86_64\\lib\\python3.11\\site-packages\\lldb\\_lldb.exe",
+      "size_mb": 112.54,
+      "size_gb": 0.11
+    },
+    {
+      "path": "C:\\Program Files\\Docker\\cli-plugins\\docker-agent.exe",
+      "size_mb": 110.75,
+      "size_gb": 0.11
+    },
+    {
+      "path": "C:\\Program Files\\Docker\\Docker\\resources\\cli-plugins\\docker-agent.exe",
+      "size_mb": 110.75,
+      "size_gb": 0.11
+    },
+    {
+      "path": "C:\\Program Files\\Docker\\Docker.backup\\resources\\cli-plugins\\docker-agent.exe",
+      "size_mb": 110.55,
+      "size_gb": 0.11
+    },
+    {
+      "path": "C:\\flutter\\bin\\cache\\artifacts\\engine\\android-x64\\flutter.jar",
+      "size_mb": 108.14,
+      "size_gb": 0.11
+    },
+    {
+      "path": "C:\\Program Files\\EA\\AC\\EAAntiCheat.GameService.exe",
+      "size_mb": 105.4,
+      "size_gb": 0.1
+    },
+    {
+      "path": "C:\\Android\\Sdk\\ndk\\26.3.11579264\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe",
+      "size_mb": 104.36,
+      "size_gb": 0.1
+    },
+    {
+      "path": "C:\\Android\\Sdk\\ndk\\26.3.11579264\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang-cl.exe",
+      "size_mb": 104.36,
+      "size_gb": 0.1
+    },
+    {
+      "path": "C:\\Android\\Sdk\\ndk\\26.3.11579264\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang.exe",
+      "size_mb": 104.36,
+      "size_gb": 0.1
+    },
+    {
+      "path": "C:\\Android\\Sdk\\ndk\\26.1.10909125\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe",
+      "size_mb": 104.35,
+      "size_gb": 0.1
+    },
+    {
+      "path": "C:\\Android\\Sdk\\ndk\\26.1.10909125\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang-cl.exe",
+      "size_mb": 104.35,
+      "size_gb": 0.1
+    },
+    {
+      "path": "C:\\Android\\Sdk\\ndk\\26.1.10909125\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang.exe",
+      "size_mb": 104.35,
+      "size_gb": 0.1
+    },
+    {
+      "path": "C:\\flutter\\bin\\cache\\artifacts\\engine\\android-x86\\flutter.jar",
+      "size_mb": 104.08,
+      "size_gb": 0.1
+    },
+    {
+      "path": "C:\\flutter\\bin\\cache\\artifacts\\engine\\android-arm\\flutter.jar",
+      "size_mb": 103.98,
+      "size_gb": 0.1
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": "HIGH",
+      "folder": "C:\\Users\\Ken Wong\\AppData\\Local\\Programs",
+      "size_gb": 8.3,
+      "method": "Manual move + Update app settings",
+      "risk": "MEDIUM-HIGH - Apps may need path updates",
+      "estimated_savings_mb": 8501.23
+    },
+    {
+      "priority": "HIGH",
+      "folder": "C:\\Users\\Ken Wong\\.gradle",
+      "size_gb": 8.26,
+      "method": "Manual move + Create symbolic link (mklink /D)",
+      "risk": "MEDIUM - Review before relocating",
+      "estimated_savings_mb": 8455.01
+    },
+    {
+      "priority": "HIGH",
+      "folder": "C:\\Users\\Ken Wong\\AppData\\Local\\Google\\Chrome\\User Data",
+      "size_gb": 6.82,
+      "method": "Manual move + Update app settings",
+      "risk": "MEDIUM-HIGH - Apps may need path updates",
+      "estimated_savings_mb": 6982.93
+    },
+    {
+      "priority": "MEDIUM",
+      "folder": "C:\\Users\\Ken Wong\\Downloads",
+      "size_gb": 4.14,
+      "method": "Windows Location Tab (Right-click folder → Properties → Location)",
+      "risk": "LOW - Safe to relocate",
+      "estimated_savings_mb": 4242.51
+    },
+    {
+      "priority": "MEDIUM",
+      "folder": "C:\\Users\\Ken Wong\\.cache",
+      "size_gb": 3.88,
+      "method": "Manual move + Create symbolic link (mklink /D)",
+      "risk": "MEDIUM - May require reconfiguration",
+      "estimated_savings_mb": 3969.14
+    },
+    {
+      "priority": "MEDIUM",
+      "folder": "C:\\Users\\Ken Wong\\.nuget",
+      "size_gb": 1.52,
+      "method": "Manual move + Create symbolic link (mklink /D)",
+      "risk": "MEDIUM - Review before relocating",
+      "estimated_savings_mb": 1556.0
+    }
+  ]
+}
