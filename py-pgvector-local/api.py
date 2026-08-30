@@ -1,15 +1,14 @@
-import os
+import sys
 import traceback
-import psycopg2
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent / "py-libraries"))
+from utilities import load_config, get_embedding_model, get_llm, get_db_connection
 from fastapi import FastAPI, Depends, HTTPException, Header
 from pydantic import BaseModel, Field
 from typing import List, Optional
-from dotenv import load_dotenv
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
-load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY")
-database_url = os.getenv("DATABASE_URL")
+
+openai_api_key, database_url = load_config(str(Path(__file__).parent / ".env"))
 app = FastAPI(title="Enterprise Policy RAG Microservice", version="1.0.0")
 class RAGResponse(BaseModel):
     answer: str = Field(description="Answer based on retrieved context.")
@@ -32,30 +31,27 @@ def ask_policy_question(
     user_roles: List[str] = Depends(get_current_user_roles)
 ):
     try:
-        embeddings_model = OpenAIEmbeddings(model="text-embedding-3-large", dimensions=1536, openai_api_key=openai_api_key)
+        embeddings_model = get_embedding_model(openai_api_key)
         question_vector = embeddings_model.embed_query(request.question)
     except Exception as e:
         log_error("Embedding generation failed", e)
         raise HTTPException(status_code=500, detail=f"Embedding error: {str(e)}")
     try:
-        conn = psycopg2.connect(database_url)
-        cur = conn.cursor()
-        sql_query = """
-            SELECT content, title, 1 - (embedding <=> %s::vector) AS similarity
-            FROM enterprise_documents
-            WHERE allowed_roles ?| %s
-            AND 1 - (embedding <=> %s::vector) > 0.5
-            ORDER BY similarity DESC
-            LIMIT 5;
-        """
-        cur.execute(sql_query, (str(question_vector), user_roles, str(question_vector)))
-        rows = cur.fetchall()
+        with get_db_connection(database_url) as conn:
+            cur = conn.cursor()
+            sql_query = """
+                SELECT content, title, 1 - (embedding <=> %s::vector) AS similarity
+                FROM enterprise_documents
+                WHERE allowed_roles ?| %s
+                AND 1 - (embedding <=> %s::vector) > 0.5
+                ORDER BY similarity DESC
+                LIMIT 5;
+            """
+            cur.execute(sql_query, (str(question_vector), user_roles, str(question_vector)))
+            rows = cur.fetchall()
     except Exception as e:
         log_error("Database retrieval failed", e)
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-    finally:
-        if 'cur' in locals(): cur.close()
-        if 'conn' in locals(): conn.close()
     if not rows:
         return RAGResponse(
             answer="No relevant or permitted information found.",
@@ -70,7 +66,7 @@ def ask_policy_question(
         ("system", system_prompt),
         ("human", "{context}\n\nQuestion: {question}")
     ])
-    llm = ChatOpenAI(model="gpt-4o", temperature=0, openai_api_key=openai_api_key)
+    llm = get_llm(openai_api_key)
     structured_llm = llm.with_structured_output(RAGResponse)
     chain = prompt_template | structured_llm
     try:

@@ -1,22 +1,24 @@
 import argparse
 import logging
-import os
-import psycopg2
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent / "py-libraries"))
+from utilities import load_config, get_embedding_model, get_llm, get_db_connection
 from typing import List, Tuple, Optional
 from dataclasses import dataclass
-from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-load_dotenv()
+
+openai_api_key, database_url = load_config(str(Path(__file__).parent / ".env"))
+
 @dataclass
 class Config:
-    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
+    OPENAI_API_KEY: str = openai_api_key
+    DATABASE_URL: str = database_url
     EMBEDDING_MODEL: str = "text-embedding-3-large"
     EMBEDDING_DIMENSIONS: int = 1536
     LLM_MODEL: str = "gpt-4o"
@@ -36,16 +38,8 @@ class RAGClient:
         cfg.validate()
         self.config = cfg
         logger.info("Initializing embedding and LLM models...")
-        self._embeddings_client = OpenAIEmbeddings(
-            model=cfg.EMBEDDING_MODEL,
-            dimensions=cfg.EMBEDDING_DIMENSIONS,
-            openai_api_key=cfg.OPENAI_API_KEY
-        )
-        self._llm_client = ChatOpenAI(
-            model=cfg.LLM_MODEL,
-            temperature=cfg.LLM_TEMPERATURE,
-            openai_api_key=cfg.OPENAI_API_KEY
-        )
+        self._embeddings_client = get_embedding_model(cfg.OPENAI_API_KEY)
+        self._llm_client = get_llm(cfg.OPENAI_API_KEY, cfg.LLM_MODEL, cfg.LLM_TEMPERATURE)
         logger.info("✓ Models initialized successfully.")
     def embed_question(self, question: str) -> List[float]:
         try:
@@ -66,15 +60,12 @@ class RAGClient:
             LIMIT %s;
         """
         try:
-            with psycopg2.connect(
-                self.config.DATABASE_URL,
-                connect_timeout=self.config.DB_TIMEOUT
-            ) as conn:
+            with get_db_connection(self.config.DATABASE_URL, self.config.DB_TIMEOUT) as conn:
                 with conn.cursor() as cur:
                     vector_str = str(query_vector)
                     cur.execute(query_sql, (vector_str, vector_str, top_k))
                     return cur.fetchall()
-        except psycopg2.Error as e:
+        except Exception as e:
             logger.error(f"Database query failed: {e}")
             raise
     def generate_answer(self, question: str, context: str) -> str:
