@@ -33,16 +33,12 @@ import os
 import re
 import sys
 import time
+from pathlib import Path
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# --- Configuration -----------------------------------------------------------
-
-def get_ollama_host(cli_host: str | None = None) -> str:
-    """Return the Ollama host, preferring a CLI override, then the environment, then localhost."""
-    host = cli_host or os.getenv("OLLAMA_HOST", "http://localhost:11434")
-    return host.rstrip('/')
-
+sys.path.insert(0, str(Path(__file__).parent.parent / "py-libraries"))
+from utilities import get_ollama_host, get_timeout_seconds, get_retry_attempts
 
 OLLAMA_HOST = get_ollama_host()
 
@@ -54,47 +50,6 @@ CHAT_ENDPOINT = f"{OLLAMA_HOST}/api/chat"
 TEST_PROMPT = "Reply with only the word 'OK'."
 MAX_TOKENS = 5
 MAX_CONCURRENT_TESTS = 5  # Adjust based on your server's capacity
-
-
-def get_timeout_seconds() -> int:
-    """Return the per-request timeout from the environment or a safer default."""
-    raw_value = os.getenv("OLLAMA_TIMEOUT_SECONDS", "60")
-    try:
-        timeout = int(raw_value)
-        if timeout <= 0:
-            raise ValueError("timeout must be positive")
-        return timeout
-    except (TypeError, ValueError):
-        print(f"[WARN] Invalid OLLAMA_TIMEOUT_SECONDS='{raw_value}'. Using default 60 seconds.")
-        return 60
-
-
-def get_retry_attempts() -> int:
-    """Return how many times a timed-out request should be retried."""
-    raw_value = os.getenv("OLLAMA_RETRY_ATTEMPTS", "1")
-    try:
-        attempts = int(raw_value)
-        if attempts <= 0:
-            raise ValueError("retry attempts must be positive")
-        return attempts
-    except (TypeError, ValueError):
-        print(f"[WARN] Invalid OLLAMA_RETRY_ATTEMPTS='{raw_value}'. Using default 1 attempt.")
-        return 1
-
-
-def parse_cloud_page_models(html: str) -> list[str]:
-    """Extract model slugs from the Ollama cloud search page HTML."""
-    pattern = re.compile(r"/library/([a-z0-9._:-]+)", re.IGNORECASE)
-    matches = pattern.findall(html)
-    return list(dict.fromkeys(matches))
-
-
-def get_cloud_page_models(page_url: str = "https://ollama.com/search?c=cloud") -> list[str]:
-    """Fetch the Ollama cloud search page and extract model library names from it."""
-    response = requests.get(page_url, timeout=20)
-    response.raise_for_status()
-    return parse_cloud_page_models(response.text)
-
 
 TIMEOUT_SECONDS = get_timeout_seconds()
 RETRY_ATTEMPTS = get_retry_attempts()

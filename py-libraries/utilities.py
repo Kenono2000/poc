@@ -1,12 +1,37 @@
 import os
+import re
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 from dotenv import load_dotenv
 from langchain_community.document_loaders import PyPDFLoader, UnstructuredMarkdownLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_core.documents import Document
 import psycopg2
+import numpy as np
+
+ROLE_HIERARCHY = {
+    "admin": ["admin", "executive", "finance_analyst", "engineering"],
+    "finance_lead": ["finance_lead", "finance_analyst"],
+    "engineering": ["engineering"]
+}
+
+def expand_user_roles(raw_roles: List[str]) -> List[str]:
+    expanded = set()
+    for role in raw_roles:
+        expanded.update(ROLE_HIERARCHY.get(role, [role]))
+    return list(expanded)
+
+def truncate_and_normalize(
+    embedding: Union[List[float], "np.ndarray"],
+    target_dim: int = 1536
+) -> List[float]:
+    vec = np.asarray(embedding[:target_dim], dtype=np.float32)
+    norm = np.linalg.norm(vec)
+    if norm == 0.0:
+        return vec.tolist()
+    normalized_vec = vec / norm
+    return normalized_vec.tolist()
 
 def load_config(env_path: Optional[str] = None) -> Tuple[str, str]:
     if env_path is None:
@@ -68,3 +93,106 @@ def get_llm(api_key: str, model: str = "gpt-4o", temperature: float = 0.0) -> Ch
 
 def get_db_connection(database_url: str, timeout: int = 30):
     return psycopg2.connect(database_url, connect_timeout=timeout)
+
+# --- Ollama utilities (extracted from py-scripts/ollama-models.py) ---------
+
+def get_ollama_host(cli_host: Optional[str] = None) -> str:
+    """Return the Ollama host, preferring a CLI override, then the environment, then localhost."""
+    host = cli_host or os.getenv("OLLAMA_HOST", "http://localhost:11434")
+    return host.rstrip('/')
+
+
+def get_timeout_seconds(default: int = 60) -> int:
+    """Return the per-request timeout from the environment or a safer default."""
+    raw_value = os.getenv("OLLAMA_TIMEOUT_SECONDS", str(default))
+    try:
+        timeout = int(raw_value)
+        if timeout <= 0:
+            raise ValueError("timeout must be positive")
+        return timeout
+    except (TypeError, ValueError):
+        print(f"[WARN] Invalid OLLAMA_TIMEOUT_SECONDS='{raw_value}'. Using default {default} seconds.")
+        return default
+
+
+def get_retry_attempts(default: int = 1) -> int:
+    """Return how many times a timed-out request should be retried."""
+    raw_value = os.getenv("OLLAMA_RETRY_ATTEMPTS", str(default))
+    try:
+        attempts = int(raw_value)
+        if attempts <= 0:
+            raise ValueError("retry attempts must be positive")
+        return attempts
+    except (TypeError, ValueError):
+        print(f"[WARN] Invalid OLLAMA_RETRY_ATTEMPTS='{raw_value}'. Using default {default} attempt.")
+        return default
+
+# --- Logging utility (extracted from py-pgvector-local/api.py) -------------
+
+def log_error(stage: str, error: Exception) -> None:
+    """Log an error message with stage context and traceback."""
+    import traceback
+    print(f"[ERROR] {stage}: {error}")
+    traceback.print_exc()
+
+# --- Math utility (extracted from py-scripts/agent-06.py) ------------------
+
+_SAFE_OPERATORS = {
+    "add": "operator.add",
+    "sub": "operator.sub",
+    "mult": "operator.mul",
+    "div": "operator.truediv",
+    "pow": "operator.pow",
+    "usub": "operator.neg",
+}
+
+
+def safe_calculate(expression: str) -> str:
+    """Evaluate a mathematical expression safely using AST parsing.
+    Supports: +, -, *, /, ** and parentheses.
+    """
+    import ast
+    import operator
+    SAFE_OPERATORS = {
+        ast.Add: operator.add,
+        ast.Sub: operator.sub,
+        ast.Mult: operator.mul,
+        ast.Div: operator.truediv,
+        ast.Pow: operator.pow,
+        ast.USub: operator.neg,
+    }
+    try:
+        tree = ast.parse(expression.strip(), mode="eval")
+        def _eval(node):
+            match node:
+                case ast.Constant(value=v) if isinstance(v, int | float):
+                    return v
+                case ast.BinOp(left=left, op=op, right=right) if type(op) in SAFE_OPERATORS:
+                    return SAFE_OPERATORS[type(op)](_eval(left), _eval(right))
+                case ast.UnaryOp(op=op, operand=operand) if type(op) in SAFE_OPERATORS:
+                    return SAFE_OPERATORS[type(op)](_eval(operand))
+                case _:
+                    raise ValueError(f"Unsupported expression: {ast.dump(node)}")
+        result = _eval(tree.body)
+        return str(result)
+    except (ValueError, ZeroDivisionError, SyntaxError) as e:
+        return f"Error evaluating expression: {e}"
+
+# --- Code utility (extracted from py-scripts/clean_comment.py) -------------
+
+def remove_comments_and_docstrings(filepath: str) -> None:
+    """Remove comments and docstrings from a source code file."""
+    if not os.path.exists(filepath):
+        print(f"File not found: {filepath}")
+        return
+    with open(filepath, 'r', encoding='utf-8') as file:
+        content = file.read()
+    dq = chr(34)
+    docstring_pattern = dq + dq + dq + r'[\s\S]*?' + dq + dq + dq
+    content = re.sub(docstring_pattern, '', content)
+    content = re.sub(r'--.*', '', content)
+    content = re.sub(r'#.*', '', content)
+    lines = [line for line in content.split('\n') if line.strip()]
+    with open(filepath, 'w', encoding='utf-8') as file:
+        file.write('\n'.join(lines))
+    print(f"Cleaned: {filepath}")

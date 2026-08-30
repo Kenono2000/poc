@@ -1,8 +1,7 @@
 import sys
-import traceback
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "py-libraries"))
-from utilities import load_config, get_embedding_model, get_llm, get_db_connection
+from utilities import load_config, get_embedding_model, get_llm, get_db_connection, log_error
 from fastapi import FastAPI, Depends, HTTPException, Header
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -16,9 +15,7 @@ class RAGResponse(BaseModel):
     confidence_score: float = Field(description="Match score from 0.0 to 1.0.")
 class QueryRequest(BaseModel):
     question: str
-def log_error(stage: str, error: Exception) -> None:
-    print(f"[ERROR] {stage}: {error}")
-    traceback.print_exc()
+
 def get_current_user_roles(authorization: Optional[str] = Header(None)) -> List[str]:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing or invalid token.")

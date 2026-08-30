@@ -1,34 +1,13 @@
 import re
 import os
 import argparse
+import sys
+from pathlib import Path
 
-def remove_comments_and_docstrings(filepath):
-    if not os.path.exists(filepath):
-        print(f"File not found: {filepath}")
-        return
+sys.path.insert(0, str(Path(__file__).parent.parent / "py-libraries"))
+from utilities import remove_comments_and_docstrings
 
-    with open(filepath, 'r', encoding='utf-8') as file:
-        content = file.read()
-    
-    # Remove docstrings (triple double quotes)
-    dq = chr(34)
-    docstring_pattern = dq + dq + dq + r'[\s\S]*?' + dq + dq + dq
-    content = re.sub(docstring_pattern, '', content)
-    
-    # Remove SQL style comments
-    content = re.sub(r'--.*', '', content)
-    
-    # Remove Python style comments
-    content = re.sub(r'#.*', '', content)
-    
-    # Remove empty lines resulting from cleanup
-    lines = [line for line in content.split('\n') if line.strip()]
-    
-    with open(filepath, 'w', encoding='utf-8') as file:
-        file.write('\n'.join(lines))
-    print(f"Cleaned: {filepath}")
-
-def main():
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Remove comments and docstrings from files.")
     parser.add_argument("path", help="Path to a file or folder to clean.")
     args = parser.parse_args()
@@ -42,7 +21,4 @@ def main():
                 remove_comments_and_docstrings(filepath)
     else:
         remove_comments_and_docstrings(args.path)
-
-if __name__ == "__main__":
-    main()
 

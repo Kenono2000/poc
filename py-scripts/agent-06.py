@@ -15,41 +15,19 @@ Features:
 Required: Ollama running with gemma4:e2b model
 """
 
-# --- Imports (Updated for LangChain 1.x) -----------------------------------
-import ast
-import operator
+import sys
+from pathlib import Path
 
 import langchain
 from langchain_core.tools import tool
 from langchain_ollama import ChatOllama
 from langchain.agents import create_agent  # The v1.x standard
 
+sys.path.insert(0, str(Path(__file__).parent.parent / "py-libraries"))
+from utilities import safe_calculate
+
 # Top-level model name used by this script
 MODEL_NAME = "gemma4:e2b"
-
-# --- Safe AST evaluator ----------------------------------------------------
-SAFE_OPERATORS = {
-    ast.Add: operator.add,
-    ast.Sub: operator.sub,
-    ast.Mult: operator.mul,
-    ast.Div: operator.truediv,
-    ast.Pow: operator.pow,
-    ast.USub: operator.neg,
-}
-
-
-def _safe_eval(node: ast.expr) -> float:
-    """Recursively evaluate an AST node using only allowed operators."""
-    match node:
-        case ast.Constant(value=v) if isinstance(v, int | float):
-            return v
-        case ast.BinOp(left=left, op=op, right=right) if type(op) in SAFE_OPERATORS:
-            return SAFE_OPERATORS[type(op)](_safe_eval(left), _safe_eval(right))
-        case ast.UnaryOp(op=op, operand=operand) if type(op) in SAFE_OPERATORS:
-            return SAFE_OPERATORS[type(op)](_safe_eval(operand))
-        case _:
-            raise ValueError(f"Unsupported expression: {ast.dump(node)}")
-
 
 # --- Tool definition -------------------------------------------------------
 @tool
@@ -58,12 +36,7 @@ def calculator_tool(expression: str) -> str:
     Supports: +, -, *, /, ** and parentheses.
     Example input: '0.15 * 450'
     """
-    try:
-        tree = ast.parse(expression.strip(), mode="eval")
-        result = _safe_eval(tree.body)
-        return str(result)
-    except (ValueError, ZeroDivisionError, SyntaxError) as e:
-        return f"Error evaluating expression: {e}"
+    return safe_calculate(expression)
 
 
 # --- Agent construction (LangChain 1.x) ------------------------------------

@@ -1,25 +1,15 @@
 import asyncio
 import os
+import sys
+from pathlib import Path
 import numpy as np
 import asyncpg
 from openai import AsyncOpenAI
 from typing import List, Dict, Any, Union
-
-from poc.py_libraries.utilities import load_config
+sys.path.insert(0, str(Path(__file__).parent.parent / "py-libraries"))
+from utilities import load_config, expand_user_roles, truncate_and_normalize
 
 openai_client = AsyncOpenAI()
-
-ROLE_HIERARCHY = {
-    "admin": ["admin", "executive", "finance_analyst", "engineering"],
-    "finance_lead": ["finance_lead", "finance_analyst"],
-    "engineering": ["engineering"]
-}
-
-def expand_user_roles(raw_roles: List[str]) -> List[str]:
-    expanded = set()
-    for role in raw_roles:
-        expanded.update(ROLE_HIERARCHY.get(role, [role]))
-    return list(expanded)
 
 async def get_matryoshka_embedding(text: str, target_dim: int = 1536) -> List[float]:
     response = await openai_client.embeddings.create(
@@ -28,17 +18,6 @@ async def get_matryoshka_embedding(text: str, target_dim: int = 1536) -> List[fl
     )
     raw_vector = response.data[0].embedding
     return truncate_and_normalize(raw_vector, target_dim=target_dim)
-
-def truncate_and_normalize(
-    embedding: Union[List[float], np.ndarray],
-    target_dim: int = 1536
-) -> List[float]:
-    vec = np.asarray(embedding[:target_dim], dtype=np.float32)
-    norm = np.linalg.norm(vec)
-    if norm == 0.0:
-        return vec.tolist()
-    normalized_vec = vec / norm
-    return normalized_vec.tolist()
 
 async def insert_document_chunk(
     pool: asyncpg.Pool,
@@ -72,10 +51,10 @@ async def shift_left_vector_search(
         return [dict(record) for record in records]
 
 async def main():
-    _, db_url = load_config()
+    _, database_url = load_config(str(Path(__file__).parent / ".env"))
 
     print("Connecting to database...")
-    pool = await asyncpg.create_pool(dsn=db_url)
+    pool = await asyncpg.create_pool(dsn=database_url)
 
     try:
         mock_query_vector = [0.1] * 1536

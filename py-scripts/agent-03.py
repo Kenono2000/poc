@@ -21,10 +21,15 @@ Use Case:
 Required: Ollama running with llama3.2:3b model
 """
 
+import sys
+from pathlib import Path
 from langchain_ollama import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.messages import HumanMessage, AIMessage
+
+sys.path.insert(0, str(Path(__file__).parent.parent / "py-libraries"))
+from utilities import safe_calculate as calculator
 
 # Top-level model name used by this script
 model = "gemma4:e2b"
@@ -35,16 +40,6 @@ model = "gemma4:e2b"
 # Step 1: Load the local model instance.
 # The model name is stored in the top-level variable above.
 llm = OllamaLLM(model=model)
-
-# Tool 1: Calculator function that evaluates basic math expressions.
-def calculator(expression: str) -> str:
-    """Evaluate a math expression and return the result as a string."""
-    try:
-        # Use Python eval for simple numeric expressions.
-        return str(eval(expression))
-    except Exception as e:
-        # Return an error message if the expression is invalid.
-        return f"Error: {str(e)}"
 
 # Tool 2: Knowledge base lookup function.
 def knowledge_base(query: str) -> str:

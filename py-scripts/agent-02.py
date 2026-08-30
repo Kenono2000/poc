@@ -19,9 +19,14 @@ Use Case:
 Required: Ollama running with llama3.2:3b model
 """
 
+import sys
+from pathlib import Path
 from langchain_ollama import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+
+sys.path.insert(0, str(Path(__file__).parent.parent / "py-libraries"))
+from utilities import safe_calculate as calculator
 
 # Top-level model name used by this script
 model = "gemma4:e2b"
@@ -34,19 +39,7 @@ model = "gemma4:e2b"
 # The model name is stored in the top-level variable above.
 llm = OllamaLLM(model=model)
 
-# Step 2: Define a simple calculator function used as a local tool.
-def calculator(expression: str) -> str:
-    """Evaluate a basic math expression and return the result as a string."""
-    try:
-        # Use Python's eval on the expression to compute the answer.
-        # This is intentionally simple for demonstration and only expected to handle safe math expressions.
-        result = eval(expression)
-        return str(result)
-    except Exception as e:
-        # Catch any evaluation error and format it as a readable message.
-        return f"Error: {str(e)}"
-
-# Step 3: Define a ReAct-style prompt template that instructs the model how to think.
+# Step 2: Define a ReAct-style prompt template that instructs the model how to think.
 # The system message describes the tool, the expected Thought/Action/Observation structure,
 # and the final answer format. The human message gets replaced with the user's question.
 prompt = ChatPromptTemplate.from_messages([
