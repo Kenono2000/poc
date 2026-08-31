@@ -1,5 +1,5 @@
 from crewai import Agent
-from .tools import DriveRelocationAnalyzerTool
+from tools import DriveRelocationAnalyzerTool
 from crewai_tools import SerperDevTool, WebsiteSearchTool
 
 # --- Research Agents ---
