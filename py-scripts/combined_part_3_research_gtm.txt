@@ -1,0 +1,203 @@
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/README.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/README.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/gtm-operating-system.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/gtm-operating-system.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/foundation-pack.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/foundation-pack.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/final-direction.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/final-direction.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/content-refresh-brief.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/content-refresh-brief.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/gtm-validation-activation-kit.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/gtm-validation-activation-kit.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/ASSET_INDEX.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/ASSET_INDEX.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/tribunal/report.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/tribunal/report.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/ux/user-and-agent-research.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/ux/user-and-agent-research.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/ux/summary.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/ux/summary.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/ux/study-design.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/ux/study-design.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/ux/source-map.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/ux/source-map.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/ux/constraint-bundle.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/ux/constraint-bundle.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/ux/persona-detection.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/ux/persona-detection.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/ux/personas/regional-operations-leader.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/ux/personas/regional-operations-leader.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/ux/personas/peak-season-member.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/ux/personas/peak-season-member.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/ux/personas/owner-finance-lead.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/ux/personas/owner-finance-lead.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/ux/personas/integration-gatekeeper.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/ux/personas/integration-gatekeeper.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/ux/personas/fleet-maintenance-lead.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/ux/personas/fleet-maintenance-lead.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/ux/personas/dock-turnaround-manager.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/ux/personas/dock-turnaround-manager.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/analysis/assumptions-falsifiers.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/analysis/assumptions-falsifiers.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/analysis/competitor-marketing-sales.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/analysis/competitor-marketing-sales.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/analysis/implicit-truths.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/analysis/implicit-truths.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/analysis/consensus-blindspots-white-space.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/analysis/consensus-blindspots-white-space.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/analysis/investor-attack.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/analysis/investor-attack.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/validation/prelaunch-product-study-plan.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/validation/prelaunch-product-study-plan.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/validation/pilot-experiment-plan.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/validation/pilot-experiment-plan.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/validation/external-validator.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/validation/external-validator.md
+
+
+================================================================================
+FILE: suntiq-product/docs/research/suntiq-gtm-2026-08/validation/conversation-guide.md
+================================================================================
+
+ERROR: File not found at suntiq-product/docs/research/suntiq-gtm-2026-08/validation/conversation-guide.md
+
