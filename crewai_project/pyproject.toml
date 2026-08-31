@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "crewai-pro"
+version = "0.1.0"
+description = "Multi-workflow CrewAI project: AI research, CrewAI news, drive relocation, LinkedIn job search."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "crewai>=0.80.0",
+    "crewai-tools>=0.4.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.5",
+]
+
+[project.scripts]
+crewai-pro = "crewai_pro.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

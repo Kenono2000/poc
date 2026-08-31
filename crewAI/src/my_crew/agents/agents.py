@@ -1,5 +1,6 @@
 from crewai import Agent
-from tools import DriveRelocationAnalyzerTool
+
+from .tools.tools import DriveRelocationAnalyzerTool
 from crewai_tools import SerperDevTool, WebsiteSearchTool
 
 # --- Research Agents ---
@@ -200,68 +201,8 @@ Your mission is to identify job opportunities that match the candidate's strict,
 ### Output Format
 
 For each role, provide:
-
-```
-### Job: [Job Title] at [Company]
-
-**LinkedIn URL:** [URL]
-
-**Hard Gates Check:**
-- Gate 0 (Remote): ✅ PASS / ❌ FAIL
-- Gate 1 (In-House IC): ✅ PASS / ❌ FAIL
-- Gate 2 (Compensation): ✅ PASS / ❌ FAIL
-
-**Scorecard:**
-| Dimension | Score | Notes |
-|-----------|-------|-------|
-| Stack Synergy | X/10 | [Brief notes] |
-| Scope & Ownership | X/10 | [Brief notes] |
-| Location & Remote | X/10 | [Brief notes] |
-| TOTAL | X/10 | |
-
-**Verdict:** TIER 1 IMMEDIATE ATTACK / CONDITIONAL PURSUIT / IMMEDIATE DISQUALIFICATION
-
-**Reason:** [1-2 sentences]
-
-**Next Step:** [ATS Drop / Outreach to Hiring Manager / Archive]
-```
-
----
-
-### Special Instructions
-
-- Be aggressive with disqualifications. If in doubt, flag it for review.
-- For roles with unlisted compensation, mark as "⚠️ Unknown" but do not automatically disqualify if the role passes Gates 0 and 1.
-- For roles with "hybrid" in Chicago, mark as conditional pass with note to confirm.
-- Flag roles that mention MCP, FastMCP, or Model Context Protocol—these are high priority.
-- Flag roles that mention pgvector, vector databases, or Shift-Left RBAC—these are high priority.
-- If a role is a clear match (score 8.0+), provide the outreach message template.
-
----
-
-### Example Outreach Message Template
-
-For Tier 1 roles:
-
-**Subject:** [Job Title] Application – [Candidate's Niche Expertise]
-
-Hi [Hiring Manager Name],
-
-I just submitted my application for the [Job Title] role at [Company]. The focus on [key technical area from JD] aligns perfectly with my background in [candidate's expertise].
-
-I specialize in [candidate's core differentiator]. Reference implementation: github.com/Kenono2000/enterprise-rag-pgvector-rbac
-
-I would welcome a brief conversation to discuss how my expertise can accelerate [Company's] roadmap.
-
-Best regards,
-Ken Wong
-Principal AI Systems Architect
-
----
-
-### Begin Search
-
-Search LinkedIn for roles matching the criteria above. Apply the Hard Gates first, then evaluate and score each role. Return results in the specified output format.""",
-    tools=[SerperDevTool(), WebsiteSearchTool()],
-    verbose=True
+""",
+    verbose=True,
+    allow_delegation=False
 )
+
