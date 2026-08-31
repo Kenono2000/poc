@@ -88,7 +88,7 @@ for output_file, input_files in parts.items():
                         outfile.write(infile.read())
                 else:
                     outfile.write(f"ERROR: File not found at {file_path}\n")
-            except Exception as e:
-                outfile.write(f"ERROR: Could not read file {file_path}: {str(e)}\n")
+            except OSError as e:
+                outfile.write(f"ERROR: Could not read file {file_path}: {e!s}\n")
             outfile.write("\n")
     print(f"Created {output_file}")

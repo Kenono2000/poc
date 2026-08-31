@@ -1,16 +1,22 @@
 import argparse
-import sys
-from pathlib import Path
-from typing import List
-
-sys.path.insert(0, str(Path(__file__).parent.parent / "py-libraries"))
-from utilities import load_config, get_documents, split_chunks, get_embedding_model, get_db_connection
-from psycopg2.extras import execute_values
 import json
-from langchain_openai import OpenAIEmbeddings
-from langchain_core.documents import Document
+from pathlib import Path
 
-def ingest_data(chunks: List[Document], embeddings_model: OpenAIEmbeddings, db_url: str):
+import openai
+import psycopg2
+from langchain_core.documents import Document
+from langchain_openai import OpenAIEmbeddings
+from psycopg2.extras import execute_values
+from utilities import (
+    get_db_connection,
+    get_documents,
+    get_embedding_model,
+    load_config,
+    split_chunks,
+)
+
+
+def ingest_data(chunks: list[Document], embeddings_model: OpenAIEmbeddings, db_url: str):
     if not chunks:
         print("No chunks to ingest.")
         return
@@ -26,17 +32,16 @@ def ingest_data(chunks: List[Document], embeddings_model: OpenAIEmbeddings, db_u
     ]
     print("📦 Inserting into PostgreSQL...")
     try:
-        with get_db_connection(db_url) as conn:
-            with conn.cursor() as cur:
-                execute_values(
-                    cur,
-                    "INSERT INTO enterprise_documents (title, content, allowed_roles, embedding) VALUES %s",
-                    data_to_insert,
-                    template="(%s, %s, %s, %s::vector)",
-                    page_size=100
-                )
+        with get_db_connection(db_url) as conn, conn.cursor() as cur:
+            execute_values(
+                cur,
+                "INSERT INTO enterprise_documents (title, content, allowed_roles, embedding) VALUES %s",
+                data_to_insert,
+                template="(%s, %s, %s, %s::vector)",
+                page_size=100
+            )
         print(f"✅ Ingestion complete. Inserted {len(data_to_insert)} chunks.")
-    except Exception as e:
+    except (psycopg2.Error, openai.OpenAIError) as e:
         print(f"❌ Database ingestion failed: {e}")
 
 def main():
@@ -49,7 +54,7 @@ def main():
         print(f"Error: {e}")
         return
 
-    file_paths: List[str] = []
+    file_paths: list[str] = []
     for path in args.paths:
         p = Path(path)
         if p.is_dir():

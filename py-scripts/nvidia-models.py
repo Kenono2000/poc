@@ -1,8 +1,9 @@
 import os
 import sys
 import time
-import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+import requests
 
 # Configuration
 NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY")
@@ -39,8 +40,11 @@ def get_nvidia_models():
         models = [model["id"] for model in data.get("data", [])]
         print(f"      Successfully retrieved {len(models)} models.\n")
         return models
-    except Exception as e:
+    except requests.exceptions.RequestException as e:
         print(f"[ERROR] Failed to fetch model list: {e}")
+        sys.exit(1)
+    except (KeyError, ValueError) as e:
+        print(f"[ERROR] Failed to parse model list: {e}")
         sys.exit(1)
 
 def test_single_model(model_id):
@@ -99,7 +103,7 @@ def test_single_model(model_id):
             "code": 408,
             "output": "Request timed out"
         }
-    except Exception as e:
+    except (requests.exceptions.RequestException, ValueError) as e:
         return {
             "model": model_id,
             "status": "ERROR",

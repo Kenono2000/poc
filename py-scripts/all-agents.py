@@ -24,48 +24,51 @@ Output:
 - Error messages if any agent fails
 """
 
-import os
 import glob
 import subprocess
 import sys
+from pathlib import Path
+
 
 def run_agent_scripts():
-    # Get the current directory
-    current_dir = os.getcwd()
+    current_dir = Path(__file__).parent.resolve()
     
-    # Find all files matching 'agent-*.py'
-    pattern = os.path.join(current_dir, 'agent-*.py')
-    agent_files = glob.glob(pattern)
+    pattern = str(current_dir / "agent-*.py")
+    agent_files = [Path(p) for p in glob.glob(pattern)]
     
-    # Exclude the current script
-    current_script = os.path.basename(__file__)
-    agent_files = [f for f in agent_files if os.path.basename(f) != current_script]
+    current_script = Path(__file__).name
+    agent_files = [f for f in agent_files if f.name != current_script]
     
-    # Sort the files for consistent order
-    agent_files.sort()
+    agent_files.sort(key=lambda p: p.name)
     
     print(f"Found {len(agent_files)} agent scripts to run:")
     for file in agent_files:
-        print(f"  - {os.path.basename(file)}")
+        print(f"  - {file.name}")
     
     print("\nRunning scripts...\n")
     
-    # Run each script
     for file in agent_files:
-        print(f"Running {os.path.basename(file)}...")
+        print(f"Running {file.name}...")
         try:
-            result = subprocess.run([sys.executable, file], capture_output=True, text=True, cwd=current_dir)
+            result = subprocess.run(
+                [sys.executable, str(file)],
+                capture_output=True,
+                text=True,
+                cwd=str(current_dir),
+                check=False
+            )
             if result.returncode == 0:
-                print(f"✓ {os.path.basename(file)} completed successfully")
+                print(f"✓ {file.name} completed successfully")
                 if result.stdout:
                     print(f"Output:\n{result.stdout}")
             else:
-                print(f"✗ {os.path.basename(file)} failed with return code {result.returncode}")
+                print(f"✗ {file.name} failed with return code {result.returncode}")
                 if result.stderr:
                     print(f"Error:\n{result.stderr}")
-        except Exception as e:
-            print(f"✗ {os.path.basename(file)} failed with exception: {e}")
+        except (OSError, subprocess.SubprocessError) as e:
+            print(f"✗ {file.name} failed with exception: {e}")
         print("-" * 50)
+
 
 if __name__ == "__main__":
     run_agent_scripts()

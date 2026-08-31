@@ -18,10 +18,9 @@ Required: Ollama running with gemma4:e2b model
 import sys
 from pathlib import Path
 
-import langchain
+from langchain.agents import create_agent  # The v1.x standard
 from langchain_core.tools import tool
 from langchain_ollama import ChatOllama
-from langchain.agents import create_agent  # The v1.x standard
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "py-libraries"))
 from utilities import safe_calculate
@@ -45,18 +44,16 @@ def build_agent(model_name: str = MODEL_NAME):
     llm = ChatOllama(model=model_name)
     tools = [calculator_tool]
 
-    # Define the system prompt for the agent
     system_prompt = (
         "You are a helpful assistant that can evaluate mathematical expressions "
         "safely using the provided calculator tool. Always use the calculator tool "
         "for any math calculations."
     )
 
-    # Create the agent using the new LangChain 1.x create_agent function
     agent = create_agent(
         model=llm,
         tools=tools,
-        system_prompt=system_prompt  # <-- FIXED: Correct parameter name
+        system_prompt=system_prompt
     )
 
     return agent
@@ -64,7 +61,6 @@ def build_agent(model_name: str = MODEL_NAME):
 
 # --- Entry point -----------------------------------------------------------
 def main():
-    print(f"Using LangChain version: {langchain.__version__}")
     agent = build_agent()
     
     # In LangChain 1.x, agents are invoked with a "messages" key

@@ -29,16 +29,16 @@ Configuration:
 """
 
 import argparse
-import os
 import re
 import sys
 import time
-from pathlib import Path
-import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+
+import requests
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "py-libraries"))
-from utilities import get_ollama_host, get_timeout_seconds, get_retry_attempts
+from utilities import get_ollama_host, get_retry_attempts, get_timeout_seconds
 
 OLLAMA_HOST = get_ollama_host()
 
@@ -54,6 +54,37 @@ MAX_CONCURRENT_TESTS = 5  # Adjust based on your server's capacity
 TIMEOUT_SECONDS = get_timeout_seconds()
 RETRY_ATTEMPTS = get_retry_attempts()
 
+# --- Cloud page parser -------------------------------------------------------
+
+_LIBRARY_LINK_RE = re.compile(r'href="(?:https?://[^"]*)?/library/([^"?]+)"')
+
+def parse_cloud_page_models(html: str) -> list[str]:
+    """Extract unique model slugs from an Ollama cloud search page."""
+    seen: set[str] = set()
+    models: list[str] = []
+    for slug in _LIBRARY_LINK_RE.findall(html):
+        slug = slug.strip().lower()
+        if slug and slug not in seen:
+            seen.add(slug)
+            models.append(slug)
+    return models
+
+
+def get_cloud_page_models() -> list[str]:
+    """Scrape the Ollama cloud search page for available model slugs."""
+    search_url = "https://ollama.com/search"
+    try:
+        response = requests.get(search_url, timeout=15)
+        response.raise_for_status()
+        return parse_cloud_page_models(response.text)
+    except requests.exceptions.RequestException as e:
+        print("[ERROR] Failed to fetch the Ollama cloud search page.")
+        print(f"        Details: {e}")
+        sys.exit(1)
+    except (ValueError, KeyError) as e:
+        print(f"[ERROR] Failed to parse cloud model list: {e}")
+        sys.exit(1)
+
 # --- Functions ---------------------------------------------------------------
 
 def get_ollama_models(source: str = "server"):
@@ -68,10 +99,10 @@ def get_ollama_models(source: str = "server"):
             print(f"      Successfully discovered {len(models)} cloud models from the web page.\n")
             return models
         except requests.exceptions.RequestException as e:
-            print(f"[ERROR] Failed to fetch the Ollama cloud search page.")
+            print("[ERROR] Failed to fetch the Ollama cloud search page.")
             print(f"        Details: {e}")
             sys.exit(1)
-        except Exception as e:
+        except (ValueError, KeyError) as e:
             print(f"[ERROR] Failed to parse cloud model list: {e}")
             sys.exit(1)
 
@@ -93,7 +124,7 @@ def get_ollama_models(source: str = "server"):
         print(f"        Details: {e}")
         print("        Please ensure Ollama is running and OLLAMA_HOST is set correctly.")
         sys.exit(1)
-    except Exception as e:
+    except (KeyError, ValueError) as e:
         print(f"[ERROR] Failed to fetch model list: {e}")
         sys.exit(1)
 
@@ -176,7 +207,7 @@ def test_single_model(model_id: str):
                 "code": "N/A",
                 "output": str(e)[:100]
             }
-        except Exception as e:
+        except (KeyError, ValueError) as e:
             return {
                 "model": model_id,
                 "status": "ERROR",

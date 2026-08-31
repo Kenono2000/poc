@@ -1,22 +1,16 @@
-from crewai import Agent, Task, Crew, Process
-from crewai_tools import SerperDevTool, WebsiteSearchTool
+from crewai import Task, Crew, Process
+from .agents import web_researcher as researcher
+
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
 
-# Initialize tools
-search_tool = SerperDevTool()  # Requires SERPER_API_KEY in .env
-web_tool = WebsiteSearchTool()
+# Tools are initialized in agents.py
 
-# Research Agent with tools
-researcher = Agent(
-    role="Research Specialist",
-    goal="Find accurate, up-to-date information using web search",
-    backstory="Expert researcher with access to real-time web data",
-    tools=[search_tool, web_tool],
-    verbose=True
-)
+
+# Researcher agent is now imported from .agents
+
 
 # Task using the tools
 research_task = Task(

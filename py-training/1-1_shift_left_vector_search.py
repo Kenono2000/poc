@@ -1,17 +1,19 @@
 import asyncio
-import os
 import sys
 from pathlib import Path
-import numpy as np
+from typing import Any
+
 import asyncpg
+import numpy as np
 from openai import AsyncOpenAI
-from typing import List, Dict, Any, Union
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "py-libraries"))
-from utilities import load_config, expand_user_roles, truncate_and_normalize
+from utilities import expand_user_roles, load_config, truncate_and_normalize
 
-openai_client = AsyncOpenAI()
+openai_api_key, _ = load_config(str(Path(__file__).parent / ".env"))
+openai_client = AsyncOpenAI(api_key=openai_api_key)
 
-async def get_matryoshka_embedding(text: str, target_dim: int = 1536) -> List[float]:
+async def get_matryoshka_embedding(text: str, target_dim: int = 1536) -> list[float]:
     response = await openai_client.embeddings.create(
         model="text-embedding-3-large",
         input=text
@@ -22,7 +24,7 @@ async def get_matryoshka_embedding(text: str, target_dim: int = 1536) -> List[fl
 async def insert_document_chunk(
     pool: asyncpg.Pool,
     content: str,
-    allowed_roles: List[str]
+    allowed_roles: list[str]
 ):
     vector_1536 = await get_matryoshka_embedding(content, target_dim=1536)
     query = """
@@ -34,10 +36,10 @@ async def insert_document_chunk(
 
 async def shift_left_vector_search(
     pool: asyncpg.Pool,
-    query_vector: List[float],
-    user_roles: List[str],
+    query_vector: list[float],
+    user_roles: list[str],
     limit: int = 5
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     effective_roles = expand_user_roles(user_roles)
     query = """
         SELECT id, content, allowed_roles, embedding <=> $1::vector AS distance
@@ -75,7 +77,7 @@ async def main():
         else:
             print("No documents found matching the roles.")
 
-    except Exception as e:
+    except (asyncpg.PostgresError, ValueError) as e:
         print(f"An error occurred: {e}")
     finally:
         await pool.close()
@@ -84,9 +86,9 @@ async def main():
 async def search_with_rbac(
     pool: asyncpg.Pool,
     user_query: str,
-    user_roles: List[str],
+    user_roles: list[str],
     limit: int = 5
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     query_vector = await get_matryoshka_embedding(user_query, target_dim=1536)
     query = """
         SELECT id, content, allowed_roles, embedding <=> $1::vector AS distance
@@ -109,5 +111,5 @@ def test_matryoshka_normalization():
 if __name__ == "__main__":
     try:
         asyncio.run(main())
-    except Exception as e:
+    except (asyncpg.PostgresError, ValueError) as e:
         print(f"Main execution skipped or failed: {e}")

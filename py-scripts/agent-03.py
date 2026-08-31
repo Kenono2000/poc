@@ -23,10 +23,11 @@ Required: Ollama running with llama3.2:3b model
 
 import sys
 from pathlib import Path
-from langchain_ollama import OllamaLLM
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+
+from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_ollama import OllamaLLM
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "py-libraries"))
 from utilities import safe_calculate as calculator
@@ -49,9 +50,9 @@ def knowledge_base(query: str) -> str:
         "ai agent": "An AI agent is a program that uses a language model to reason and take actions.",
         "ollama": "Ollama is a tool for running language models locally on your computer.",
     }
-    for key in kb:
+    for key, value in kb.items():
         if key in query.lower():
-            return kb[key]
+            return value
     return "No information found for that query."
 
 # Register tool names to function handlers so the agent can call them.

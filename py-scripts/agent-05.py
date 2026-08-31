@@ -25,10 +25,10 @@ Required: Ollama running with llama3.2:3b model
 """
 
 # Import necessary modules for LangChain chat, memory, and prompts
-from langchain_ollama import ChatOllama
 from langchain_core.chat_history import InMemoryChatMessageHistory
-from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_ollama import ChatOllama
 
 # Top-level model name used by this script
 model = "gemma4:e2b"

@@ -18,9 +18,9 @@ Use Case:
 Required: Ollama running with llama3.2:3b model
 """
 
-from langchain_ollama import OllamaLLM
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_ollama import OllamaLLM
 
 # Top-level model name used by this script
 model = "gemma4:e2b"

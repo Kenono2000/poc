@@ -10,10 +10,15 @@ services:
       - "5432:5432"
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U rag_user -d enterprise_rag"]
       interval: 5s
       timeout: 5s
       retries: 5
+
+volumes:
+  pgdata:
 
 # docker-compose up -d

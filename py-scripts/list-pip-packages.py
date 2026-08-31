@@ -6,8 +6,8 @@ recently (within the specified time window). Helpful for cleaning up
 unused dependencies.
 
 Features:
-- Scans all installed packages using importlib.metadata
-- Checks timestamps of Python files for last access time
+- Scans installed packages using importlib.metadata
+- Checks modification times of package top-level files
 - Filters out packages not found in the file system
 - Customizable time threshold (default: 30 days)
 - Displays packages sorted by last usage date
@@ -30,43 +30,40 @@ import importlib.metadata
 import importlib.util
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
-days = 30
-cutoff = time.time() - days * 86400
 
-unused = []
-
-for dist in importlib.metadata.distributions():
-    name = dist.metadata["Name"]
-
+def _get_package_mtime(name: str) -> float | None:
+    """Return the most recent modification time among top-level package files."""
+    spec = importlib.util.find_spec(name)
+    if not spec or not spec.origin:
+        return None
+    origin = spec.origin
+    if not os.path.isfile(origin):
+        return None
     try:
-        spec = importlib.util.find_spec(name)
-        if not spec or not spec.origin:
-            continue
+        return os.path.getmtime(origin)
+    except OSError:
+        return None
 
-        path = spec.origin
-        if not os.path.exists(path):
-            continue
 
-        # Scan .py and .pyc timestamps
-        timestamps = []
-        for root, dirs, files in os.walk(os.path.dirname(path)):
-            for f in files:
-                if f.endswith((".py", ".pyc")):
-                    timestamps.append(os.path.getmtime(os.path.join(root, f)))
+def find_unused_packages(days: int = 30) -> list[tuple[str, datetime]]:
+    cutoff = time.time() - days * 86400
+    unused: list[tuple[str, datetime]] = []
 
-        if not timestamps:
-            continue
+    for dist in importlib.metadata.distributions():
+        name = dist.metadata["Name"]
+        mtime = _get_package_mtime(name)
+        if mtime is not None and mtime < cutoff:
+            unused.append((name, datetime.fromtimestamp(mtime, tz=timezone.utc)))
 
-        last_used = max(timestamps)
+    return sorted(unused, key=lambda x: x[1])
 
-        if last_used < cutoff:
-            unused.append((name, datetime.fromtimestamp(last_used)))
 
-    except Exception:
-        pass
+if __name__ == "__main__":
+    days = 30
+    unused = find_unused_packages(days=days)
 
-print("Packages NOT used in the last", days, "days:")
-for name, ts in sorted(unused, key=lambda x: x[1]):
-    print(f"{name:30} last used: {ts}")
+    print(f"Packages NOT used in the last {days} days:")
+    for name, ts in unused:
+        print(f"{name:30} last used: {ts}")

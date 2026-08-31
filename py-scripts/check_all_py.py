@@ -1,9 +1,8 @@
-import os
-import sys
 import subprocess
+import sys
 import time
-from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 # --- Configuration ---
 # Root directory to search for .py files
@@ -22,7 +21,8 @@ def run_script(script_path: Path):
             [sys.executable, "-m", "py_compile", str(script_path)],
             capture_output=True,
             text=True,
-            timeout=TIMEOUT
+            timeout=TIMEOUT,
+            check=False
         )
         duration = time.time() - start_time
         
@@ -52,7 +52,7 @@ def run_script(script_path: Path):
             "duration": f">{TIMEOUT}s",
             "error": f"Exceeded {TIMEOUT}s limit"
         }
-    except Exception as e:
+    except (OSError, subprocess.SubprocessError) as e:
         return {
             "path": str(script_path.relative_to(ROOT_DIR.parent)),
             "status": "ERROR",
@@ -75,7 +75,6 @@ def main():
 
     print(f"Found {len(scripts)} scripts. Starting syntax check...\n")
     
-    results = []
     # Using ThreadPoolExecutor for concurrent compilation check
     with ThreadPoolExecutor(max_workers=8) as executor:
         results = list(executor.map(run_script, scripts))

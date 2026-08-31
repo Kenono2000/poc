@@ -1,14 +1,34 @@
+__all__ = [
+    "expand_user_roles",
+    "get_db_connection",
+    "get_documents",
+    "get_embedding_model",
+    "get_llm",
+    "get_ollama_host",
+    "get_retry_attempts",
+    "get_timeout_seconds",
+    "load_config",
+    "log_error",
+    "remove_comments_and_docstrings",
+    "safe_calculate",
+    "split_chunks",
+    "truncate_and_normalize",
+]
+
+import ast
+import operator
 import os
 import re
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import Union
+
+import numpy as np
+import psycopg2
 from dotenv import load_dotenv
 from langchain_community.document_loaders import PyPDFLoader, UnstructuredMarkdownLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_core.documents import Document
-import psycopg2
-import numpy as np
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 ROLE_HIERARCHY = {
     "admin": ["admin", "executive", "finance_analyst", "engineering"],
@@ -16,16 +36,27 @@ ROLE_HIERARCHY = {
     "engineering": ["engineering"]
 }
 
-def expand_user_roles(raw_roles: List[str]) -> List[str]:
+_SAFE_OPERATORS = {
+    ast.Add: operator.add,
+    ast.Sub: operator.sub,
+    ast.Mult: operator.mul,
+    ast.Div: operator.truediv,
+    ast.Pow: operator.pow,
+    ast.USub: operator.neg,
+}
+
+_DOCSTRING_PATTERN = re.compile(r'"""[\s\S]*?"""')
+
+def expand_user_roles(raw_roles: list[str]) -> list[str]:
     expanded = set()
     for role in raw_roles:
         expanded.update(ROLE_HIERARCHY.get(role, [role]))
     return list(expanded)
 
 def truncate_and_normalize(
-    embedding: Union[List[float], "np.ndarray"],
+    embedding: Union[list[float], "np.ndarray"],
     target_dim: int = 1536
-) -> List[float]:
+) -> list[float]:
     vec = np.asarray(embedding[:target_dim], dtype=np.float32)
     norm = np.linalg.norm(vec)
     if norm == 0.0:
@@ -33,7 +64,7 @@ def truncate_and_normalize(
     normalized_vec = vec / norm
     return normalized_vec.tolist()
 
-def load_config(env_path: Optional[str] = None) -> Tuple[str, str]:
+def load_config(env_path: str | None = None) -> tuple[str, str]:
     if env_path is None:
         env_path = str(Path(__file__).parent / ".env")
     load_dotenv(env_path)
@@ -45,7 +76,7 @@ def load_config(env_path: Optional[str] = None) -> Tuple[str, str]:
         raise ValueError("DATABASE_URL missing from .env.")
     return openai_api_key, database_url
 
-def get_documents(file_paths: List[str]) -> List[Document]:
+def get_documents(file_paths: list[str]) -> list[Document]:
     print(f"📄 Loading {len(file_paths)} document(s)...")
     documents = []
     for file_path in file_paths:
@@ -60,16 +91,16 @@ def get_documents(file_paths: List[str]) -> List[Document]:
                 continue
             documents.extend(loader.load())
             print(f"  [✓] Loaded {file_path}")
-        except Exception as e:
+        except (OSError, RuntimeError) as e:
             print(f"❌ Failed to load {file_path}: {e}")
     return documents
 
 def split_chunks(
-    documents: List[Document],
+    documents: list[Document],
     chunk_size: int = 2000,
     chunk_overlap: int = 200,
-    separators: Optional[List[str]] = None
-) -> List[Document]:
+    separators: list[str] | None = None
+) -> list[Document]:
     if separators is None:
         separators = ["\n\n", "\n", " ", ""]
     text_splitter = RecursiveCharacterTextSplitter(
@@ -96,7 +127,7 @@ def get_db_connection(database_url: str, timeout: int = 30):
 
 # --- Ollama utilities (extracted from py-scripts/ollama-models.py) ---------
 
-def get_ollama_host(cli_host: Optional[str] = None) -> str:
+def get_ollama_host(cli_host: str | None = None) -> str:
     """Return the Ollama host, preferring a CLI override, then the environment, then localhost."""
     host = cli_host or os.getenv("OLLAMA_HOST", "http://localhost:11434")
     return host.rstrip('/')
@@ -135,50 +166,26 @@ def log_error(stage: str, error: Exception) -> None:
     print(f"[ERROR] {stage}: {error}")
     traceback.print_exc()
 
-# --- Math utility (extracted from py-scripts/agent-06.py) ------------------
-
-_SAFE_OPERATORS = {
-    "add": "operator.add",
-    "sub": "operator.sub",
-    "mult": "operator.mul",
-    "div": "operator.truediv",
-    "pow": "operator.pow",
-    "usub": "operator.neg",
-}
-
-
 def safe_calculate(expression: str) -> str:
     """Evaluate a mathematical expression safely using AST parsing.
     Supports: +, -, *, /, ** and parentheses.
     """
-    import ast
-    import operator
-    SAFE_OPERATORS = {
-        ast.Add: operator.add,
-        ast.Sub: operator.sub,
-        ast.Mult: operator.mul,
-        ast.Div: operator.truediv,
-        ast.Pow: operator.pow,
-        ast.USub: operator.neg,
-    }
     try:
         tree = ast.parse(expression.strip(), mode="eval")
         def _eval(node):
             match node:
                 case ast.Constant(value=v) if isinstance(v, int | float):
                     return v
-                case ast.BinOp(left=left, op=op, right=right) if type(op) in SAFE_OPERATORS:
-                    return SAFE_OPERATORS[type(op)](_eval(left), _eval(right))
-                case ast.UnaryOp(op=op, operand=operand) if type(op) in SAFE_OPERATORS:
-                    return SAFE_OPERATORS[type(op)](_eval(operand))
+                case ast.BinOp(left=left, op=op, right=right) if type(op) in _SAFE_OPERATORS:
+                    return _SAFE_OPERATORS[type(op)](_eval(left), _eval(right))
+                case ast.UnaryOp(op=op, operand=operand) if type(op) in _SAFE_OPERATORS:
+                    return _SAFE_OPERATORS[type(op)](_eval(operand))
                 case _:
                     raise ValueError(f"Unsupported expression: {ast.dump(node)}")
         result = _eval(tree.body)
         return str(result)
     except (ValueError, ZeroDivisionError, SyntaxError) as e:
         return f"Error evaluating expression: {e}"
-
-# --- Code utility (extracted from py-scripts/clean_comment.py) -------------
 
 def remove_comments_and_docstrings(filepath: str) -> None:
     """Remove comments and docstrings from a source code file."""
@@ -187,9 +194,7 @@ def remove_comments_and_docstrings(filepath: str) -> None:
         return
     with open(filepath, 'r', encoding='utf-8') as file:
         content = file.read()
-    dq = chr(34)
-    docstring_pattern = dq + dq + dq + r'[\s\S]*?' + dq + dq + dq
-    content = re.sub(docstring_pattern, '', content)
+    content = _DOCSTRING_PATTERN.sub('', content)
     content = re.sub(r'--.*', '', content)
     content = re.sub(r'#.*', '', content)
     lines = [line for line in content.split('\n') if line.strip()]

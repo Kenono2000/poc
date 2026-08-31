@@ -3,7 +3,6 @@ import os
 import unittest
 from pathlib import Path
 
-
 SCRIPT_PATH = Path(__file__).with_name("ollama-models.py")
 SPEC = importlib.util.spec_from_file_location("ollama_models", SCRIPT_PATH)
 MODULE = importlib.util.module_from_spec(SPEC)

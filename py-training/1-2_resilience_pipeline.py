@@ -1,11 +1,14 @@
 import asyncio
-import uuid
-import sys
 import logging
+import os
+import sys
+import uuid
+from contextlib import asynccontextmanager
 from pathlib import Path
+
 import asyncpg
 import redis.asyncio as aioredis
-from contextlib import asynccontextmanager
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "py-libraries"))
 from utilities import load_config
 
@@ -20,7 +23,7 @@ logger = logging.getLogger("ResiliencePipeline")
 # Configuration
 
 _, DB_DSN = load_config(str(Path(__file__).parent / ".env"))
-REDIS_URL = "redis://localhost:6379"
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 
 # 1. Bounded Concurrency: Maximum 10 concurrent downstream operations
 MAX_CONCURRENT_TASKS = 10
@@ -43,6 +46,7 @@ async def distributed_lock(
     Retries with exponential backoff when the lock is contended.
     """
     token = str(uuid.uuid4())
+    acquired = False
     for attempt in range(max_retries):
         try:
             logger.debug(f"Lock attempt {attempt+1}/{max_retries} for {lock_key}")
@@ -97,34 +101,33 @@ async def mutate_balance_worker(
             async with distributed_lock(redis_client, lock_name, ttl_seconds=3):
                 logger.info(f"Worker {worker_id:02d}: Lock secured, starting DB transaction")
                 # Acquire connection from bounded asyncpg pool
-                async with db_pool.acquire() as conn:
-                    async with conn.transaction():
-                        # Read current state
-                        row = await conn.fetchrow(
-                            "SELECT balance_cents, version FROM account_balances WHERE account_id = $1 FOR UPDATE",
-                            account_id
-                        )
-                        
-                        if row["balance_cents"] < debit_amount_cents:
-                            logger.warning(f"Worker {worker_id:02d}: Insufficient funds ({row['balance_cents']} cents)")
-                            raise ValueError("Insufficient funds")
-                        
-                        # Atomic mutation
-                        new_balance = row["balance_cents"] - debit_amount_cents
-                        await conn.execute(
-                            """
-                            UPDATE account_balances 
-                            SET balance_cents = $1, version = version + 1, updated_at = NOW()
-                            WHERE account_id = $2
-                            """,
-                            new_balance, account_id
-                        )
-                        msg = f"Worker {worker_id:02d} SUCCESS: Debited {debit_amount_cents} cents. New balance: {new_balance}"
-                        logger.info(msg)
-                        return msg
-        except Exception as e:
-            logger.error(f"Worker {worker_id:02d} FAILED: {str(e)}")
-            raise e
+                async with db_pool.acquire() as conn, conn.transaction():
+                    # Read current state
+                    row = await conn.fetchrow(
+                        "SELECT balance_cents, version FROM account_balances WHERE account_id = $1 FOR UPDATE",
+                        account_id
+                    )
+                    
+                    if row["balance_cents"] < debit_amount_cents:
+                        logger.warning(f"Worker {worker_id:02d}: Insufficient funds ({row['balance_cents']} cents)")
+                        raise ValueError("Insufficient funds")
+                    
+                    # Atomic mutation
+                    new_balance = row["balance_cents"] - debit_amount_cents
+                    await conn.execute(
+                        """
+                        UPDATE account_balances 
+                        SET balance_cents = $1, version = version + 1, updated_at = NOW()
+                        WHERE account_id = $2
+                        """,
+                        new_balance, account_id
+                    )
+                    msg = f"Worker {worker_id:02d} SUCCESS: Debited {debit_amount_cents} cents. New balance: {new_balance}"
+                    logger.info(msg)
+                    return msg
+        except (asyncpg.PostgresError, aioredis.RedisError, ValueError) as e:
+            logger.error(f"Worker {worker_id:02d} FAILED: {e!s}")
+            raise
 
 async def main():
     logger.info("Starting Resilience Pipeline Simulation...")
@@ -132,7 +135,7 @@ async def main():
     try:
         db_pool = await asyncpg.create_pool(dsn=DB_DSN, min_size=5, max_size=20)
         logger.info("Connected to PostgreSQL pool.")
-    except Exception as e:
+    except (asyncpg.PostgresError, OSError) as e:
         logger.critical(f"Failed to connect to DB: {e}")
         return
 
@@ -162,7 +165,7 @@ async def main():
         error_types = Counter(type(f).__name__ for f in failures)
         print("\nFailure breakdown:")
         for err_type, count in error_types.most_common():
-            sample = failures[[i for i, f in enumerate(failures) if type(f).__name__ == err_type][0]]
+            sample = next(f for f in failures if type(f).__name__ == err_type)
             print(f"  - {err_type:15}: {count} occurrences (Sample: {sample})")
     print("="*50)
 

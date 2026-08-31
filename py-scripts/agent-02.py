@@ -21,9 +21,10 @@ Required: Ollama running with llama3.2:3b model
 
 import sys
 from pathlib import Path
-from langchain_ollama import OllamaLLM
-from langchain_core.prompts import ChatPromptTemplate
+
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_ollama import OllamaLLM
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "py-libraries"))
 from utilities import safe_calculate as calculator
