@@ -92,6 +92,7 @@ yarn-error.log*
 # Project specific
 _agents/
 tempCodeRunnerFile.py
+job_search_results*.md
 marimo/_static/
 marimo/_lsp/
 __marimo__/

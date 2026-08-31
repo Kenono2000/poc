@@ -70,7 +70,7 @@ def run_linkedin_job_search():
     result = my_crew_project.linkedin_job_crew().kickoff()
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    filename = f"job_search_results_{timestamp}.txt"
+    filename = f"job_search_results_{timestamp}.md"
 
     with open(filename, "w", encoding="utf-8") as f:
         f.write(str(result))
