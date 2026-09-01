@@ -1,5 +1,6 @@
 from src.my_crew.crews.my_crews import MyCrew
 import os
+import argparse
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -63,7 +64,7 @@ def run_linkedin_job_search():
     print("   Titles: Principal AI Architect | Staff AI Engineer | Principal AI Systems Architect | IC5 Principal Engineer")
     print("   Location: 100% Remote (US) or Hybrid in Greater Chicago")
     print("   Scope: In-house IC only, $140k+ base, no consulting/customer-facing")
-    print("   Posted: Last 7 days")
+    print("   Posted: Last 24 hours")
     print("=" * 80 + "\n")
     print("🔍 Searching LinkedIn with Hard Gates, scoring rubric, and red-flag filters...\n")
 
@@ -112,6 +113,14 @@ def _is_enabled(label):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="CrewAI Workflows")
+    parser.add_argument("--linkedin-jobs", action="store_true", help="Run LinkedIn Job Search and exit")
+    args = parser.parse_args()
+
+    if args.linkedin_jobs:
+        run_linkedin_job_search()
+        exit(0)
+
     if not WORKFLOWS:
         print("❌ All workflows are disabled. Set at least one WORKFLOW_* env var to 'true'.")
         exit(0)

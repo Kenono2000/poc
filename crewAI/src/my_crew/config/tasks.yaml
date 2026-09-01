@@ -144,7 +144,7 @@ linkedin_job_task:
        - Principal Software Engineer, AI
        - IC5 Principal Engineer
 
-    2. Filter for roles posted in the last 7 days.
+    2. Filter for roles posted in the last 24 hours.
 
     3. For each role, apply the Hard Gates first. If any Hard Gate fails, discard immediately.
 
