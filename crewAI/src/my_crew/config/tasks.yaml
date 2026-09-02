@@ -59,24 +59,28 @@ linkedin_job_task:
     ### Non-Negotiable Search Criteria (HARD GATES)
 
     **Gate 0: Location & Work Model (HIGHEST PRIORITY - Immediate Disqualification if not met)**
-    - ✅ MUST be 100% Remote (US-based) OR
-    - ✅ MUST be Hybrid in Greater Chicago area
-    - ❌ IMMEDIATE DISQUALIFY: Any role requiring 2+ days onsite outside Chicago
+    - ✅ MUST be 100% Remote (US-based, any state) OR
+    - ✅ MUST be Hybrid in a major US tech hub: Chicago (preferred), NYC, SF Bay, Seattle, Boston, Austin, Denver, Atlanta, LA, DC
+    - ⚠️ CONDITIONAL: Hybrid in a non-hub US city (accept only if role is exceptional, score 9+ on other dimensions)
+    - ❌ IMMEDIATE DISQUALIFY: Any role requiring 3+ days onsite anywhere
     - ❌ IMMEDIATE DISQUALIFY: Any role requiring >25% travel
-    - ❌ IMMEDIATE DISQUALIFY: Any role tied to a specific non-Chicago city (NYC, SF, Austin, etc.)
+    - ❌ IMMEDIATE DISQUALIFY: Any role physically tied to a non-US location
+    - ❌ IMMEDIATE DISQUALIFY: Any role requiring relocation
 
     **Gate 1: Employment Nature & Scope (IMMEDIATE DISQUALIFICATION if violated)**
-    - ✅ MUST be direct-hire, permanent, in-house product/platform engineering
-    - ✅ MUST be Individual Contributor (IC) role with 0% people management
-    - ✅ MUST involve hands-on production coding and architecture
-    - ❌ IMMEDIATE DISQUALIFY: Consulting, agency, staff augmentation
-    - ❌ IMMEDIATE DISQUALIFY: Customer-facing delivery, pre-sales, post-sales
-    - ❌ IMMEDIATE DISQUALIFY: Forward Deployed Engineer, Solutions Architect
-    - ❌ IMMEDIATE DISQUALIFY: Roles with people management responsibilities
+    - ✅ MUST be direct-hire, permanent, in-house product/platform engineering (no C2C, no contract-to-hire)
+    - ✅ MUST be Individual Contributor (IC) role; "lead" of a small team (≤2 reports) is acceptable
+    - ✅ MUST involve hands-on production coding and architecture (>50% IC time)
+    - ❌ IMMEDIATE DISQUALIFY: Consulting, agency, staff augmentation, Big-4 / Accenture / Deloitte-style firm
+    - ❌ IMMEDIATE DISQUALIFY: Customer-facing delivery, pre-sales, post-sales, customer success engineering
+    - ❌ IMMEDIATE DISQUALIFY: Forward Deployed Engineer, Solutions Architect, Field Engineer
+    - ❌ IMMEDIATE DISQUALIFY: People management as primary responsibility (managing managers / 5+ reports)
 
-    **Gate 2: Compensation Baseline**
-    - ✅ MUST have base salary of $140,000+ (or unlisted but likely to meet)
-    - ❌ IMMEDIATE DISQUALIFY: Listed base salary below $140,000
+    **Gate 2: Compensation Baseline (SOFT GATE — moved to scoring, not auto-disqualify)**
+    - ✅ Target: base salary $160,000+ (IC4/Principal market rate)
+    - ⚠️ CONDITIONAL: base $130k–$160k with strong equity/bonus — score normally, note in scorecard
+    - ⚠️ CONDITIONAL: unlisted comp — assume mid-band, score normally, verify in screen
+    - ❌ IMMEDIATE DISQUALIFY: Listed base salary below $110,000 OR clearly junior band
 
     ---
 
@@ -133,24 +137,56 @@ linkedin_job_task:
 
     ---
 
-    ### Search Strategy
+    ### Expanded Search Strategy
 
-    1. Search LinkedIn for these titles:
-       - Principal Engineer, AI Platform
-       - Principal AI Architect
-       - Staff Software Engineer, AI
-       - Principal AI Systems Architect
-       - Senior Staff Engineer, AI/ML
-       - Principal Software Engineer, AI
-       - IC5 Principal Engineer
+    **Search Volume Target: 30–60 candidate roles per run.**
 
-    2. Filter for roles posted in the last 24 hours.
+    1. **Title search — run ALL of these LinkedIn job searches (each is a separate query):**
 
-    3. For each role, apply the Hard Gates first. If any Hard Gate fails, discard immediately.
+       **Tier 1 — Direct match (run first, highest yield):**
+       - "Principal Engineer, AI Platform"
+       - "Principal AI Architect"
+       - "Principal AI Engineer"
+       - "Staff Software Engineer, AI"
+       - "Staff Engineer, AI Platform"
+       - "Staff ML Engineer"
+       - "Senior Staff Engineer, AI/ML"
+       - "Principal Software Engineer, AI"
+       - "Principal ML Engineer"
+       - "Principal Engineer, Machine Learning"
 
-    4. If Hard Gates pass, evaluate against Green Lights and Red Flags.
+       **Tier 2 — Adjacent AI platform roles (widens net):**
+       - "Staff Engineer, LLM"
+       - "Principal Engineer, GenAI"
+       - "Staff Engineer, RAG"
+       - "Principal Engineer, Applied AI"
+       - "Staff Engineer, MLOps"
+       - "Senior Staff Engineer, AI Infrastructure"
+       - "Principal Engineer, AI Infrastructure"
+       - "Staff Engineer, Vector Database"
+       - "Architect, AI Platform"
+       - "AI Platform Architect"
 
-    5. Score each role using the rubric below.
+       **Tier 3 — Broader senior-IC sweep (cast wider, expect more filtering):**
+       - "Principal Engineer" + filter: AI OR ML OR LLM OR "machine learning"
+       - "Staff Engineer" + filter: AI OR ML OR LLM
+       - "Senior Principal Engineer"
+       - "Distinguished Engineer, AI"
+       - "Fellow Engineer, AI"
+       - "Principal Backend Engineer" + filter: Python OR "FastAPI" OR .NET
+       - "Staff Backend Engineer" + filter: AI OR ML OR LLM
+
+    2. **Filter for roles posted in the last 30 days** (expand from 24h — most LinkedIn searches return zero results on a 24h window for niche titles). 24h filter only when explicitly requested.
+
+    3. **Do NOT pre-filter by remote/hybrid in the LinkedIn search** — pull ALL locations and let the Hard Gates disqualify. Many recruiters mis-tag hybrid roles as "remote."
+
+    4. **Include "Easy Apply" and non-Easy Apply roles** — do not restrict.
+
+    5. **For each candidate role, apply the Hard Gates first.** If any Hard Gate fails, discard immediately (only auto-disqualify on Gate 2 if base < $110k).
+
+    6. **If Hard Gates pass, evaluate against Green Lights and Red Flags.**
+
+    7. **Score each surviving role using the rubric below.** Aim to surface 5–15 scored roles minimum; if fewer than 5 survive Hard Gates, expand to Tier 3 titles and re-run.
 
     ---
 
@@ -197,12 +233,14 @@ linkedin_job_task:
 
     ### Special Instructions
 
-    - Be aggressive with disqualifications. If in doubt, flag it for review.
+    - **Volume first:** aim for 30–60 candidate roles ingested, 5–15 surviving and scored. If the first search returns < 20 results, immediately broaden to Tier 2, then Tier 3 — do not stop early.
+    - Be aggressive with disqualifications on Gates 0 and 1. On Gate 2 (comp), downgrade rather than disqualify unless base < $110k.
     - For roles with unlisted compensation, mark as "⚠️ Unknown" but do not automatically disqualify if the role passes Gates 0 and 1.
-    - For roles with "hybrid" in Chicago, mark as conditional pass with note to confirm.
-    - Flag roles that mention MCP, FastMCP, or Model Context Protocol—these are high priority.
-    - Flag roles that mention pgvector, vector databases, or Shift-Left RBAC—these are high priority.
+    - For roles with "hybrid" in a major hub, mark as conditional pass with note to confirm.
+    - Flag roles that mention MCP, FastMCP, or Model Context Protocol — these are high priority.
+    - Flag roles that mention pgvector, vector databases, or Shift-Left RBAC — these are high priority.
     - If a role is a clear match (score 8.0+), provide the outreach message template.
+    - **Recency note:** if 0 results in last 7 days for a Tier 1 title, expand window to 30 days and add Tier 2/3 titles before reporting an empty search.
 
     ---
 

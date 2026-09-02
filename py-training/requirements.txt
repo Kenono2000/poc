@@ -1,4 +1,7 @@
-asyncpg==0.31.0
-numpy==2.4.6
-openai==3.6.0
-redis==8.1.0
+asyncpg
+fastmcp
+numpy
+openai
+pydantic
+pytest
+redis
