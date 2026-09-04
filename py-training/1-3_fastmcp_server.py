@@ -4,6 +4,9 @@ import sys
 import warnings
 import importlib.util
 from pathlib import Path
+import asyncio
+import json
+
 
 # Suppress Pydantic settings warning
 warnings.filterwarnings("ignore", message="Field 'lifespan' has an incomplete definition")
@@ -21,9 +24,6 @@ TransactionTransferRequest = contracts.TransactionTransferRequest
 TransactionTransferResponse = contracts.TransactionTransferResponse
 
 # Initialize FastMCP Server
-mcp = FastMCP("Enterprise-Financial-Agent-Gateway")
-
-
 mcp = FastMCP("Enterprise-Financial-Agent-Gateway")
 
 @mcp.tool()
@@ -49,8 +49,25 @@ async def execute_account_transfer(
         authorized=True
     )
 
+async def inspect_mcp_tool_schema():
+    # Retrieve all registered tools from the FastMCP server instance
+    tools = await mcp.list_tools()
+    for tool in tools:
+        if tool.name == "execute_account_transfer":
+            print("--- FastMCP Tool Export ---")
+            print(f"Tool Name: {tool.name}")
+            print(f"Tool Description: {tool.description}")
+            print("Tool InputSchema (JSON-RPC Protocol):")
+            print(json.dumps(tool.inputSchema, indent=2))
+
 if __name__ == "__main__":
-    # Check if we want to run in dev mode or SSE
+    # 1. First, inspect the schema (Optional Debug)
+    try:
+        asyncio.run(inspect_mcp_tool_schema())
+    except Exception as e:
+        print(f"Could not inspect schema: {e}")
+
+    # 2. Then run the server
     if "--sse" in sys.argv:
         print("Starting SSE Server on http://localhost:8000/sse")
         mcp.run(transport="sse")
@@ -58,3 +75,7 @@ if __name__ == "__main__":
         # Standard MCP run (Stdio)
         # Note: Do not run this manually in a terminal and hit 'Enter'
         mcp.run()
+
+
+# fastmcp run .\1-3_fastmcp_server.py --no-banner --reload
+# npx @modelcontextprotocol/inspector python 1-3_fastmcp_server.py --tool execute_account_transfer --json-schema

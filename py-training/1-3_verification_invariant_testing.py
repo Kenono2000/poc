@@ -60,4 +60,29 @@ def test_self_transfer_constraint_fails():
     with pytest.raises(ValidationError):
         TransactionTransferRequest(**payload)
 
+def test_transaction_schema_contract_invariants():
+    schema = TransactionTransferRequest.model_json_schema()
+    properties = schema["properties"]
+    
+    # 1. Verify Regex Patterns
+    assert properties["source_account"]["pattern"] == r"^acc_[a-zA-Z0-9]{8,16}$"
+    assert properties["destination_account"]["pattern"] == r"^acc_[a-zA-Z0-9]{8,16}$"
+    
+    # 2. Verify Physical Numeric Bounds
+    assert properties["amount_cents"]["exclusiveMinimum"] == 0
+    assert properties["amount_cents"]["maximum"] == 5_000_000
+    
+    # 3. Verify String Bounds
+    assert properties["audit_reason"]["minLength"] == 10
+    assert properties["audit_reason"]["maxLength"] == 255
+    
+    # 4. Verify Required vs Optional Fields
+    assert set(schema["required"]) == {
+        "source_account", 
+        "destination_account", 
+        "amount_cents", 
+        "audit_reason"
+    }
+    assert "currency" not in schema["required"]
+
 # pytest -v 1-3_verification_invariant_testing.py

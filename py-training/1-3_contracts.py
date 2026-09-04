@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional
 from enum import Enum
 import re
+import json
 
 class CurrencyEnum(str, Enum):
     USD = "USD"
@@ -48,3 +49,7 @@ class TransactionTransferResponse(BaseModel):
     debited_cents: int
     fee_cents: int
     authorized: bool
+
+# Export the generated JSON Schema
+schema = TransactionTransferRequest.model_json_schema()
+print(json.dumps(schema, indent=2))
