@@ -3,7 +3,7 @@
 from crewai import Crew, Task
 
 from crewai_pro.agents import web_researcher
-from crewai_pro.workflows import Workflow
+from .base import Workflow
 
 KEY = "crewai_news"
 LABEL = "CrewAI News Research"
@@ -16,8 +16,8 @@ def build_crew() -> Crew:
         tasks=[
             Task(
                 description=(
-                    "Search the web for the latest news about CrewAI and "
-                    "multi-agent systems. Find 3 recent developments."
+                    "Search the web for the latest news about CrewAI and multi-agent "
+                    "systems. Find 3 recent developments."
                 ),
                 expected_output="Summary of 3 recent developments with sources",
                 agent=web_researcher,
@@ -30,6 +30,7 @@ def build_crew() -> Crew:
 def run():
     print("\n--- Running: CrewAI News Research ---\n")
     result = build_crew().kickoff()
+    print("\n\n=== FINAL RESULT ===\n\n")
     print(result)
     return result
 

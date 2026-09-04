@@ -3,7 +3,7 @@
 from crewai import Crew, Process, Task
 
 from crewai_pro.agents import researcher, writer
-from crewai_pro.workflows import Workflow
+from .base import Workflow
 
 KEY = "ai_research"
 LABEL = "AI Agent Frameworks Research & Article"

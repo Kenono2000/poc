@@ -12,6 +12,7 @@ dependencies = [
     "crewai>=0.80.0",
     "crewai-tools>=0.4.0",
     "python-dotenv>=1.0.0",
+    "pyyaml",
 ]
 
 [project.optional-dependencies]

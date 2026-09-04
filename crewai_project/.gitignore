@@ -1,11 +1,9 @@
-__pycache__/
-*.py[cod]
-*.egg-info/
 .venv/
-venv/
+__pycache__/
+*.pyc
 .env
-build/
-dist/
-.pytest_cache/
-.ruff_cache/
 *.log
+drive_relocation_analysis.json
+relocation_recommendations.csv
+job_search_results_*.txt
+job_search_results_*.md

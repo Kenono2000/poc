@@ -3,7 +3,7 @@
 from crewai import Crew, Process, Task
 
 from crewai_pro.agents import drive_analyst, relocation_specialist, report_writer
-from crewai_pro.workflows import Workflow
+from .base import Workflow
 
 KEY = "relocation"
 LABEL = "Drive Relocation Analyzer"

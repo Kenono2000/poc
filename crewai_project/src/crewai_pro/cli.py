@@ -100,7 +100,7 @@ def main(argv: list[str] | None = None) -> int:
     group.add_argument("--all", action="store_true", help="Run every enabled workflow in order.")
     args = parser.parse_args(argv)
 
-    f = flags()
+    # f = flags()
     enabled = enabled_workflows()
 
     if args.list:
