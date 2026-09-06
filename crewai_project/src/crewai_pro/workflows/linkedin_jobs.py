@@ -99,6 +99,27 @@ def build_crew() -> Crew:
                 - Recommended Action: [Apply + P2P Message / Screening Gating Script / Discard]
                 - Tailored P2P Note (<300 chars for LinkedIn):
                 "[Short note highlighting FastMCP + pgvector RBAC demo + Inspira distributed systems]"
+                ### Special Instructions
+                - Be aggressive with disqualifications. If a role is a "Core ML" trap (PyTorch/Model Training) or a "Consulting" trap, kill it immediately.
+                - For roles with unlisted compensation, mark Gate 3 as "⚠️ UNKNOWN" but do not automatically disqualify if the role passes Gates 0, 1, and 2 and looks like a Principal/Staff level role.
+                - Flag roles that explicitly mention MCP, FastMCP, AI Gateway, or Identity for AI Agents—these are absolute gold mines.
+                - If a role is a clear match (score 8.0+), provide the tailored outreach message template.
+
+                ---
+                ### Example Outreach Message Template
+                For Tier 1 roles:
+                **Subject:** [Job Title] Application – [Candidate's Niche Expertise]
+                Hi [Hiring Manager Name],
+                I just submitted my application for the [Job Title] role at [Company]. The focus on [key technical area from JD] aligns perfectly with my background in [candidate's expertise].
+                I specialize in [candidate's core differentiator]. Reference implementation: github.com/Kenono2000/enterprise-rag-pgvector-rbac
+                I would welcome a brief conversation to discuss how my expertise can accelerate [Company's] roadmap.
+                Best regards,
+                Ken Wong
+                Principal AI Systems Architect
+
+                ---
+                ### Begin Search
+                Search LinkedIn for roles matching the criteria above. Apply the Hard Gates first, then evaluate and score each role. Return results in the specified output format.
                 """,
                 expected_output=(
                     "A filtered, scored list of LinkedIn job postings according to the specified "
@@ -120,7 +141,7 @@ def run():
     print("   Titles: Principal AI Platform Engineer | Staff AI Infrastructure | Enterprise AI Platform Architect")
     print("   Location: 100% Remote (US) or Hybrid in Greater Chicago (CST)")
     print("   Scope: In-house IC only, $140k+ base, no consulting/pre-sales/core ML research")
-    print("   Posted: Last 7 days")
+    print("   [Posted: Last 7 days]")
     print(line + "\n")
     print("🔍 Searching LinkedIn with Hard Gates, scoring rubric, and red-flag filters...\n")
 
