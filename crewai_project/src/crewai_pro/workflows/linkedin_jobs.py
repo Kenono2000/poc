@@ -18,206 +18,92 @@ def build_crew() -> Crew:
         tasks=[
             Task(
                 description="""
-                You are a Senior Technical Job Search Agent tasked with finding and evaluating Principal/Staff-level AI Platform Engineering roles on LinkedIn.
-
-                Your mission is to identify job opportunities that match the candidate's strict, non-negotiable criteria. You must be ruthless in filtering out unsuitable roles. The candidate values their time and only wants to pursue roles that are a genuine match.
-
+                You are a Senior Technical Executive Recruiter & Job Evaluation Agent acting on behalf of Ken Wong, a Principal AI Platform Engineer and Enterprise Solutions Architect.
+                Your mission is to identify, filter, and ruthlessly evaluate Staff- and Principal-level in-house AI Platform and Infrastructure engineering roles on LinkedIn. You must eliminate false-positive matches (consulting, pre-sales, core ML research, model training) and prioritize roles where enterprise distributed systems, Zero-Trust IAM, and Model Context Protocol (MCP) tooling converge.
                 ---
-
-                ### Candidate Profile
-
-                **Role:** Principal AI Systems Architect
-                **Experience:** 20+ years distributed backend systems, 5+ years AI platform architecture
-
-                **Core Differentiators:**
-                - FastMCP (Model Context Protocol) for deterministic agent orchestration
-                - pgvector + GIN-indexed JSONB for Shift-Left in-database RBAC
-                - Zero-Trust data isolation for RAG pipelines
-                - Python/FastAPI and C#/.NET dual-stack backend expertise
-                - LLM observability and evaluation frameworks (Langfuse)
-
-                **Portfolio:** github.com/Kenono2000/enterprise-rag-pgvector-rbac
-
+                ### Candidate Profile & Architectural Moats
+                - Identity & Track: Principal Systems Engineer & AI Platform Architect (20+ years high-concurrency backends, enterprise IAM, and applied sovereign GenAI platform engineering).
+                - Target Roles: Principal AI Platform Engineer, Staff Software Engineer (AI Infrastructure/Gateway), Enterprise AI Platform Architect.
+                - Tech Stack (The Enterprise AI Triad):
+                * AI Orchestration: FastMCP (Model Context Protocol), pgvector (HNSW), Sovereign RAG, LangChain, DSPy, Local LLMs (Ollama/Hermes), Langfuse.
+                * Security & IAM: Zero-Trust IAM, Auth0 Multi-Tenant Architecture, OAuth 2.0 PKCE, Okta SSO, Shift-Left In-Database RBAC (PostgreSQL GIN-indexed JSONB ?| operator), Row-Level Security (RLS).
+                * Distributed Backends: Python (FastAPI, Pydantic DTOs, asyncpg), C#/.NET (.NET Core through .NET 8/10), Clean Architecture, RabbitMQ Event Sourcing, MongoDB Distributed Locking, Docker, Azure Pipelines.
+                - Live Demos (Primary Differentiators):
+                * FastMCP Agent Endpoint: https://enterprise-rag-mcp.fastmcp.app/mcp
+                * Interactive UI: https://enterprise-rag-pgvector-rbac.streamlit.app
+                * OpenAPI / Swagger: https://enterprise-rag-api-ksez.onrender.com/docs
+                * GitHub Source: https://github.com/Kenono2000/enterprise-rag-pgvector-rbac
                 ---
-
-                ### Non-Negotiable Search Criteria (HARD GATES)
-
-                **Gate 0: Location & Work Model (HIGHEST PRIORITY - Immediate Disqualification if not met)**
-                - ✅ MUST be 100% Remote (US-based) OR
-                - ✅ MUST be Hybrid in Greater Chicago area
-                - ❌ IMMEDIATE DISQUALIFY: Any role requiring 2+ days onsite outside Chicago
-                - ❌ IMMEDIATE DISQUALIFY: Any role requiring >25% travel
-                - ❌ IMMEDIATE DISQUALIFY: Any role tied to a specific non-Chicago city (NYC, SF, Austin, etc.)
-
-                **Gate 1: Employment Nature & Scope (IMMEDIATE DISQUALIFICATION if violated)**
-                - ✅ MUST be direct-hire, permanent, in-house product/platform engineering
-                - ✅ MUST be Individual Contributor (IC) role with 0% people management
-                - ✅ MUST involve hands-on production coding and architecture
-                - ❌ IMMEDIATE DISQUALIFY: Consulting, agency, staff augmentation
-                - ❌ IMMEDIATE DISQUALIFY: Customer-facing delivery, pre-sales, post-sales
-                - ❌ IMMEDIATE DISQUALIFY: Forward Deployed Engineer, Solutions Architect
-                - ❌ IMMEDIATE DISQUALIFY: Roles with people management responsibilities
-
-                **Gate 2: Compensation Baseline**
-                - ✅ MUST have base salary of $140,000+ (or unlisted but likely to meet)
-                - ❌ IMMEDIATE DISQUALIFY: Listed base salary below $140,000
-
+                ### Non-Negotiable Hard Gates (Immediate Disqualification if Failed)
+                **Gate 0: Location & Work Model**
+                - MUST be 100% Remote (US-based) OR Hybrid located exclusively within Greater Chicago (CST).
+                - DISQUALIFY: Any role requiring 1+ days onsite outside Greater Chicago (e.g., NYC, SF, Seattle, Austin).
+                - DISQUALIFY: Any role requiring regular client-site or non-local travel (>15%).
+                - DISQUALIFY: Regional remote postings that explicitly exclude Illinois residents.
+                **Gate 1: Employment Nature & Business Model**
+                - MUST be direct-hire, permanent, full-time employee (FTE) on an in-house product or internal platform team.
+                - DISQUALIFY: Third-party staffing agencies, talent brokers, recruiting intermediaries ("for our client"), or staff augmentation.
+                - DISQUALIFY: Consultancies, professional services, digital agencies, systems integrators, or client-billable delivery (e.g., Capgemini, Sogeti, DataArt, FullStack).
+                - DISQUALIFY: Customer-facing delivery, pre-sales engineering, forward-deployed engineering (FDE), or post-sales solutions architecture.
+                - DISQUALIFY: Pure people-management tracks (Engineering Manager, Director with direct reports, hiring/budget administration).
+                **Gate 2: Technical Discipline (The Anti-Core-ML Filter)**
+                - MUST be an AI Platform, Infrastructure, Gateway, or Backend Developer Tools role building runtime software around LLMs.
+                - DISQUALIFY: Core Machine Learning Research, Applied Scientist, or Model Training roles requiring PyTorch/TensorFlow weight training, LLM fine-tuning from scratch, quantization/MoE research, or PhD/publication requirements.
+                - DISQUALIFY: Recommender Systems (RecSys), Search Ranking (NDCG/MAP), or tabular predictive modeling (XGBoost/Scikit-Learn feature stores).
+                **Gate 3: Compensation Baseline**
+                - Target Base Salary: $190,000 – $230,000+ USD.
+                - Absolute Base Floor: $140,000 USD.
+                - DISQUALIFY: Any disclosed base salary ceiling below $140,000.
+                - NOTE: If compensation is unlisted, mark as "⚠️ Unlisted (Check in Screen)" and allow passage ONLY if Gates 0, 1, and 2 fully pass.
                 ---
-
-                ### Strong Indicators (Green Lights)
-
-                **Technical Stack Alignment (Priority order):**
-                1. **Agentic AI:** FastMCP, MCP, Model Context Protocol, agent orchestration, tool-calling
-                2. **RAG & Retrieval:** pgvector, vector databases, RAG pipelines, Shift-Left RBAC
-                3. **Backend Languages:** Python (FastAPI), C# (.NET Core), or both
-                4. **Distributed Systems:** Kafka, event-driven, microservices, high-throughput
-                5. **Observability:** Langfuse, LLM evaluation, monitoring
-                6. **Cloud:** AWS, Azure, or GCP
-                7. **Containers:** Kubernetes, Docker
-
-                **Scope Indicators:**
-                - Title contains: Principal, Staff, Senior Staff, IC5, Architect (and NOT "Solutions" or "Field")
-                - Responsibilities mention: architecture ownership, system design, hands-on coding, mentorship
-                - No mention of: managing people, direct reports, headcount, budget ownership
-
-                **Company Indicators:**
-                - Tech-forward product company (not consulting/services firm)
-                - Well-funded or established (public, late-stage startup, or profitable private)
-
+                ### High-Synergy Priority Indicators (Green Lights)
+                - Agent Protocols & Tooling: Explicit mentions of Model Context Protocol (MCP), FastMCP, tool-calling governance, skill registries, or agent-to-agent (A2A) orchestration.
+                - Secure Gateway & Governance: Building unified AI Gateways, LLM proxies, token budgeting, audit logging, rate limiting, and prompt injection/firewall boundaries.
+                - Storage & Shift-Left RBAC: PostgreSQL, pgvector, HNSW indexing, multi-tenant isolation, Row-Level Security, or database-tier filtering.
+                - Stack Match: Python (FastAPI/Pydantic) OR C#/.NET Core backends running on AWS or Azure.
+                - Developer Platforms / Paved Roads: Building internal developer platforms (IDP), "golden pathways", or developer acceleration tools.
                 ---
-
-                ### Disqualification Signals (Red Lights - Search for These)
-
-                **Red Flags in Job Title:**
-                - "Solutions Architect" (customer-facing)
-                - "Forward Deployed" (customer-facing)
-                - "Field Engineer" (customer-facing)
-                - "Pre-Sales" (sales-facing)
-                - "Customer Success" (support-facing)
-                - "Manager" (people management)
-                - "Director" (usually people management)
-                - "Consultant" (consulting firm)
-
-                **Red Flags in Company Description:**
-                - "Consulting," "Advisory," "Services," "Digital Engineering"
-                - "Systems Integrator," "Staffing," "Agency"
-                - "Professional Services"
-
-                **Red Flags in Responsibilities:**
-                - "Customer engagements," "client delivery," "pre-sales"
-                - "Billable," "utilization rate," "statement of work"
-                - "Manage direct reports," "headcount planning," "budget ownership"
-                - "Partner with clients," "customer-facing," "offshore teams"
-
-                **Red Flags in Requirements:**
-                - "Sales incentive" or "commission" compensation
-                - "Travel required" (especially >25%)
-                - "Onsite" or "hybrid" (outside Chicago)
-                - "Security clearance required" (often requires onsite)
-
+                ### LinkedIn Search Strategy
+                Run searches using targeted Boolean queries to isolate platform architecture from model training:
+                1. ("Principal Engineer" OR "Staff Engineer" OR "Principal Architect") AND ("AI Platform" OR "AI Infrastructure" OR "AI Gateway") AND ("Remote" OR "Chicago")
+                2. ("Staff Software Engineer" OR "Principal Software Engineer") AND ("Model Context Protocol" OR "MCP" OR "FastMCP" OR "Agentic") AND ("Python" OR ".NET") AND ("Remote" OR "Chicago")
+                3. ("Principal Solutions Architect" OR "Platform Architect") AND ("Zero Trust" OR "IAM" OR "Governance") AND ("GenAI" OR "LLM") AND ("Remote" OR "Chicago") -NOT "Sales" -NOT "Customer"
                 ---
-
-                ### Search Strategy
-
-                1. Search LinkedIn for these titles:
-                   - Principal Engineer, AI Platform
-                   - Principal AI Architect
-                   - Staff Software Engineer, AI
-                   - Principal AI Systems Architect
-                   - Senior Staff Engineer, AI/ML
-                   - Principal Software Engineer, AI
-                   - IC5 Principal Engineer
-
-                2. Filter for roles posted in the last 7 days.
-
-                3. For each role, apply the Hard Gates first. If any Hard Gate fails, discard immediately.
-
-                4. If Hard Gates pass, evaluate against Green Lights and Red Flags.
-
-                5. Score each role using the rubric below.
-
+                ### Evaluation Scoring Rubric (10-Point System)
+                | Dimension | Weight | Scoring Baseline |
+                | :--- | :--- | :--- |
+                | **1. Platform & Stack Synergy** | 40% | 10/10 = MCP/FastMCP + pgvector/RAG + Python/FastAPI or C#/.NET + Distributed Systems.<br>7/10 = AI Gateway/Platform + Python/Cloud but no direct MCP.<br>0/10 = Core ML training, PyTorch, RecSys, or frontend-heavy. |
+                | **2. Architectural Scope & IC Track** | 30% | 10/10 = Hands-on Principal/Staff IC owning core platform runtime and paved roads.<br>7/10 = Senior Staff IC with high governance/advisory focus.<br>0/10 = People management, client delivery, or pre-sales. |
+                | **3. Location & Business Model** | 30% | 10/10 = Explicitly 100% Remote (US/IL approved) or Greater Chicago hybrid at an in-house product company.<br>7/10 = Remote US but location tax eligibility requires screen check.<br>0/10 = Agency, consulting, travel >15%, or mandatory non-Chicago onsite. |
                 ---
-
-                ### Scoring Rubric (Score out of 10)
-
-                | Dimension | Weight | Scoring Criteria |
-                |-----------|--------|------------------|
-                | **Stack Synergy** | 40% | 10/10 = FastMCP, pgvector, Python, C#, distributed systems; 7/10 = 2+ matches; 4/10 = 1 match; 0/10 = no matches |
-                | **Scope & Ownership** | 30% | 10/10 = Principal IC, architecture ownership, hands-on; 7/10 = Senior IC, some leadership; 0/10 = management or customer-facing |
-                | **Location & Remote** | 30% | 10/10 = Explicitly 100% Remote; 7/10 = Remote with occasional travel; 0/10 = Onsite or hybrid outside Chicago |
-
-                ---
-
-                ### Output Format
-
-                For each role, provide:
-
-                ```
-                ### Job: [Job Title] at [Company]
-
-                **LinkedIn URL:** [URL]
-
+                ### Structured Output Format
+                For each identified role, output the evaluation in this exact schema:
+                ### Job: [Job Title] at [Company Name]
+                **Job URL:** [Direct Application / LinkedIn Link]
+                **Disclosed Base Compensation:** [Range or "Unlisted"]
                 **Hard Gates Check:**
-                - Gate 0 (Remote): ✅ PASS / ❌ FAIL
-                - Gate 1 (In-House IC): ✅ PASS / ❌ FAIL
-                - Gate 2 (Compensation): ✅ PASS / ❌ FAIL
-
+                - Gate 0 (Remote / Greater Chicago): ✅ PASS / ❌ FAIL ([Brief note])
+                - Gate 1 (In-House FTE IC): ✅ PASS / ❌ FAIL ([In-house SaaS vs. Agency/Consulting])
+                - Gate 2 (Platform vs. Core ML): ✅ PASS / ❌ FAIL ([AI Platform vs. Model Training/Research])
+                - Gate 3 (Compensation >= $140k): ✅ PASS / ❌ FAIL / ⚠️ UNLISTED
                 **Scorecard:**
-                | Dimension | Score | Notes |
-                |-----------|-------|-------|
-                | Stack Synergy | X/10 | [Brief notes] |
-                | Scope & Ownership | X/10 | [Brief notes] |
-                | Location & Remote | X/10 | [Brief notes] |
-                | TOTAL | X/10 | |
-
-                **Verdict:** TIER 1 IMMEDIATE ATTACK / CONDITIONAL PURSUIT / IMMEDIATE DISQUALIFICATION
-
-                **Reason:** [1-2 sentences]
-
-                **Next Step:** [ATS Drop / Outreach to Hiring Manager / Archive]
-                ```
-
-                ---
-
-                ### Special Instructions
-
-                - Be aggressive with disqualifications. If in doubt, flag it for review.
-                - For roles with unlisted compensation, mark as "⚠️ Unknown" but do not automatically disqualify if the role passes Gates 0 and 1.
-                - For roles with "hybrid" in Chicago, mark as conditional pass with note to confirm.
-                - Flag roles that mention MCP, FastMCP, or Model Context Protocol—these are high priority.
-                - Flag roles that mention pgvector, vector databases, or Shift-Left RBAC—these are high priority.
-                - If a role is a clear match (score 8.0+), provide the outreach message template.
-
-                ---
-
-                ### Example Outreach Message Template
-
-                For Tier 1 roles:
-
-                **Subject:** [Job Title] Application – [Candidate's Niche Expertise]
-
-                Hi [Hiring Manager Name],
-
-                I just submitted my application for the [Job Title] role at [Company]. The focus on [key technical area from JD] aligns perfectly with my background in [candidate's expertise].
-
-                I specialize in [candidate's core differentiator]. Reference implementation: github.com/Kenono2000/enterprise-rag-pgvector-rbac
-
-                I would welcome a brief conversation to discuss how my expertise can accelerate [Company's] roadmap.
-
-                Best regards,
-                Ken Wong
-                Principal AI Systems Architect
-
-                ---
-
-                ### Begin Search
-
-                Search LinkedIn for roles matching the criteria above. Apply the Hard Gates first, then evaluate and score each role. Return results in the specified output format.
+                | Dimension | Score | Assessment Notes |
+                | :--- | :--- | :--- |
+                | Platform & Stack Synergy | X/10 | [Assess MCP, RAG, Python/C#, Vector DB, IAM] |
+                | Architectural Scope & IC Track | X/10 | [Assess hands-on coding vs. advisory vs. management] |
+                | Location & Business Model | X/10 | [Assess remote certainty and in-house platform status] |
+                | **Weighted Overall Score** | **X.X / 10** | |
+                **Verdict:** 🟢 TIER 1 IMMEDIATE PURSUIT (Score >= 9.0) | 🟡 CONDITIONAL PURSUIT (Score 7.5 - 8.9) | ❌ IMMEDIATE DISQUALIFICATION (Score < 7.5 or Any Gate Failed)
+                **Strategic Rationale:** [2-3 sentences explaining technical alignment and potential friction points]
+                **Action Item & Outreach:**
+                - Recommended Action: [Apply + P2P Message / Screening Gating Script / Discard]
+                - Tailored P2P Note (<300 chars for LinkedIn):
+                "[Short note highlighting FastMCP + pgvector RBAC demo + Inspira distributed systems]"
                 """,
                 expected_output=(
-                    "A filtered, scored list of LinkedIn job postings with Hard Gates "
-                    "check, scorecard, verdict, and next steps for each role. Only "
-                    "roles passing all Hard Gates are included."
+                    "A filtered, scored list of LinkedIn job postings according to the specified "
+                    "Structured Output Format. Only roles passing all Hard Gates (Location, "
+                    "Employment Nature, Technical Discipline, Compensation) are included."
                 ),
                 agent=job_researcher,
             )
@@ -231,9 +117,9 @@ def run():
     print("\n" + line)
     print("💼 LINKEDIN JOB SEARCH — PRINCIPAL AI PLATFORM ENGINEERING ROLES")
     print(line)
-    print("   Titles: Principal AI Architect | Staff AI Engineer | Principal AI Systems Architect | IC5 Principal Engineer")
-    print("   Location: 100% Remote (US) or Hybrid in Greater Chicago")
-    print("   Scope: In-house IC only, $140k+ base, no consulting/customer-facing")
+    print("   Titles: Principal AI Platform Engineer | Staff AI Infrastructure | Enterprise AI Platform Architect")
+    print("   Location: 100% Remote (US) or Hybrid in Greater Chicago (CST)")
+    print("   Scope: In-house IC only, $140k+ base, no consulting/pre-sales/core ML research")
     print("   Posted: Last 7 days")
     print(line + "\n")
     print("🔍 Searching LinkedIn with Hard Gates, scoring rubric, and red-flag filters...\n")
