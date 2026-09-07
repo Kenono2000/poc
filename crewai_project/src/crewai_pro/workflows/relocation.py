@@ -1,13 +1,49 @@
 """Workflow 3 — Drive Relocation Analyzer."""
 
-from crewai import Crew, Process, Task
+from crewai import Agent, Crew, Process, Task
 
-from crewai_pro.agents import drive_analyst, relocation_specialist, report_writer
+from crewai_pro.tools import DriveRelocationAnalyzerTool
 from .base import Workflow
 
 KEY = "relocation"
 LABEL = "Drive Relocation Analyzer"
 FLAG_NAME = "relocation"
+
+drive_analyst = Agent(
+    role="Senior Storage Analyst",
+    goal="Identify safe relocation opportunities to optimize drive space",
+    backstory=(
+        "You are an expert storage administrator who specializes in optimizing "
+        "disk space by identifying relocatable folders and files. You prioritize "
+        "safety and provide clear, actionable recommendations."
+    ),
+    tools=[DriveRelocationAnalyzerTool()],
+    verbose=True,
+    allow_delegation=False,
+)
+
+relocation_specialist = Agent(
+    role="Data Migration Specialist",
+    goal="Provide step-by-step relocation instructions",
+    backstory=(
+        "You are a data migration expert who creates detailed, easy-to-follow "
+        "guides for moving files and folders between drives. You always include "
+        "safety checks and rollback procedures."
+    ),
+    verbose=True,
+    allow_delegation=False,
+)
+
+report_writer = Agent(
+    role="Technical Documentation Writer",
+    goal="Create clear relocation guides for end users",
+    backstory=(
+        "You translate complex storage analysis into user-friendly guides that "
+        "help non-technical users safely relocate their data."
+    ),
+    verbose=True,
+    allow_delegation=False,
+)
 
 
 def build_crew() -> Crew:

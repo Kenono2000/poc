@@ -1,13 +1,34 @@
 """Workflow 1 — AI Agent Frameworks Research & Article."""
 
-from crewai import Crew, Process, Task
+from crewai import Agent, Crew, Process, Task
 
-from crewai_pro.agents import researcher, writer
 from .base import Workflow
 
 KEY = "ai_research"
 LABEL = "AI Agent Frameworks Research & Article"
 FLAG_NAME = "ai_research"
+
+researcher = Agent(
+    role="Senior Research Analyst",
+    goal="Discover innovative developments in AI agents",
+    backstory=(
+        "You are an expert analyst at a leading tech think tank. "
+        "Your specialty is finding cutting-edge developments in AI."
+    ),
+    verbose=True,
+    allow_delegation=False,
+)
+
+writer = Agent(
+    role="Tech Content Strategist",
+    goal="Craft compelling content on tech advancements",
+    backstory=(
+        "You are a renowned content strategist known for making complex "
+        "tech topics accessible and engaging."
+    ),
+    verbose=True,
+    allow_delegation=False,
+)
 
 
 def build_crew() -> Crew:

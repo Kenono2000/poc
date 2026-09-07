@@ -1,13 +1,21 @@
 """Workflow 2 — CrewAI / multi-agent news research."""
 
-from crewai import Crew, Task
+from crewai import Agent, Crew, Task
+from crewai_tools import SerperDevTool, WebsiteSearchTool
 
-from crewai_pro.agents import web_researcher
 from .base import Workflow
 
 KEY = "crewai_news"
 LABEL = "CrewAI News Research"
 FLAG_NAME = "crewai_news"
+
+web_researcher = Agent(
+    role="Research Specialist",
+    goal="Find accurate, up-to-date information using web search",
+    backstory="Expert researcher with access to real-time web data",
+    tools=[SerperDevTool(), WebsiteSearchTool()],
+    verbose=True,
+)
 
 
 def build_crew() -> Crew:

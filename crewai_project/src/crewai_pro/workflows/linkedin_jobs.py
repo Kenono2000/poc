@@ -2,14 +2,30 @@
 
 from datetime import datetime
 
-from crewai import Crew, Task
+from crewai import Agent, Crew, Task
+from crewai_tools import SerperDevTool
 
-from crewai_pro.agents import job_researcher
 from .base import Workflow
 
 KEY = "linkedin_jobs"
 LABEL = "LinkedIn Job Search"
 FLAG_NAME = "linkedin_jobs"
+
+job_researcher = Agent(
+    role="Senior Technical Job Search Agent",
+    goal=(
+        "Find and evaluate Principal/Staff-level AI Platform Engineering roles "
+        "exclusively on LinkedIn against strict non-negotiable criteria"
+    ),
+    backstory=(
+        "You are a rigorous technical recruiter who evaluates roles for Ken Wong, "
+        "a Principal AI Systems Architect. Search ONLY on LinkedIn for job postings. "
+        "Apply every hard gate in the task, discard weak matches, and return only "
+        "evidence-backed evaluations with direct LinkedIn URLs."
+    ),
+    tools=[SerperDevTool()],
+    verbose=True,
+)
 
 
 def build_crew() -> Crew:
@@ -50,11 +66,13 @@ def build_crew() -> Crew:
                 - MUST be an AI Platform, Infrastructure, Gateway, or Backend Developer Tools role building runtime software around LLMs.
                 - DISQUALIFY: Core Machine Learning Research, Applied Scientist, or Model Training roles requiring PyTorch/TensorFlow weight training, LLM fine-tuning from scratch, quantization/MoE research, or PhD/publication requirements.
                 - DISQUALIFY: Recommender Systems (RecSys), Search Ranking (NDCG/MAP), or tabular predictive modeling (XGBoost/Scikit-Learn feature stores).
-                **Gate 3: Compensation Baseline**
-                - Target Base Salary: $190,000 – $230,000+ USD.
+                                **Gate 3: Compensation Baseline**
                 - Absolute Base Floor: $140,000 USD.
                 - DISQUALIFY: Any disclosed base salary ceiling below $140,000.
                 - NOTE: If compensation is unlisted, mark as "⚠️ Unlisted (Check in Screen)" and allow passage ONLY if Gates 0, 1, and 2 fully pass.
+                **Gate 4: Recency (Freshness)**
+                - MUST be posted within the last 7 days.
+                - DISQUALIFY: Any posting older than 7 days.
                 ---
                 ### High-Synergy Priority Indicators (Green Lights)
                 - Agent Protocols & Tooling: Explicit mentions of Model Context Protocol (MCP), FastMCP, tool-calling governance, skill registries, or agent-to-agent (A2A) orchestration.
@@ -63,11 +81,11 @@ def build_crew() -> Crew:
                 - Stack Match: Python (FastAPI/Pydantic) OR C#/.NET Core backends running on AWS or Azure.
                 - Developer Platforms / Paved Roads: Building internal developer platforms (IDP), "golden pathways", or developer acceleration tools.
                 ---
-                ### LinkedIn Search Strategy
-                Run searches using targeted Boolean queries to isolate platform architecture from model training:
-                1. ("Principal Engineer" OR "Staff Engineer" OR "Principal Architect") AND ("AI Platform" OR "AI Infrastructure" OR "AI Gateway") AND ("Remote" OR "Chicago")
-                2. ("Staff Software Engineer" OR "Principal Software Engineer") AND ("Model Context Protocol" OR "MCP" OR "FastMCP" OR "Agentic") AND ("Python" OR ".NET") AND ("Remote" OR "Chicago")
-                3. ("Principal Solutions Architect" OR "Platform Architect") AND ("Zero Trust" OR "IAM" OR "Governance") AND ("GenAI" OR "LLM") AND ("Remote" OR "Chicago") -NOT "Sales" -NOT "Customer"
+                                ### LinkedIn-Only Search Strategy
+                                Search EXCLUSIVELY on linkedin.com/jobs using this specific targeted Boolean query. Focus ONLY on jobs posted within the past week (last 7 days). Go through the first 10 pages of results (approximately 100 results) to ensure thorough coverage:
+                                1. site:linkedin.com/jobs ("Principal AI Platform Engineer" OR "Principal AI Systems Architect" OR "Staff Software Engineer" OR "Staff Platform Engineer") AND ("Model Context Protocol" OR "FastMCP" OR "MCP" OR "pgvector" OR "AI Gateway" OR "RAG") AND ("Python" OR ".NET" OR "C#") AND ("Remote" OR "Remote US" OR "100% Remote") NOT ("Consultant" OR "Agency" OR "Staffing" OR "Pre-Sales" OR "Solutions Architect" OR "PyTorch" OR "RecSys")
+
+
                 ---
                 ### Evaluation Scoring Rubric (10-Point System)
                 | Dimension | Weight | Scoring Baseline |
@@ -79,13 +97,14 @@ def build_crew() -> Crew:
                 ### Structured Output Format
                 For each identified role, output the evaluation in this exact schema:
                 ### Job: [Job Title] at [Company Name]
-                **Job URL:** [Direct Application / LinkedIn Link]
+                **Job URL:** [Direct LinkedIn Job Posting URL - must be linkedin.com/jobs/view/XXXXX]
                 **Disclosed Base Compensation:** [Range or "Unlisted"]
                 **Hard Gates Check:**
                 - Gate 0 (Remote / Greater Chicago): ✅ PASS / ❌ FAIL ([Brief note])
                 - Gate 1 (In-House FTE IC): ✅ PASS / ❌ FAIL ([In-house SaaS vs. Agency/Consulting])
-                - Gate 2 (Platform vs. Core ML): ✅ PASS / ❌ FAIL ([AI Platform vs. Model Training/Research])
+                                - Gate 2 (Platform vs. Core ML): ✅ PASS / ❌ FAIL ([AI Platform vs. Model Training/Research])
                 - Gate 3 (Compensation >= $140k): ✅ PASS / ❌ FAIL / ⚠️ UNLISTED
+                - Gate 4 (Recency < 7 days): ✅ PASS / ❌ FAIL ([Date Posted])
                 **Scorecard:**
                 | Dimension | Score | Assessment Notes |
                 | :--- | :--- | :--- |
@@ -99,7 +118,13 @@ def build_crew() -> Crew:
                 - Recommended Action: [Apply + P2P Message / Screening Gating Script / Discard]
                 - Tailored P2P Note (<300 chars for LinkedIn):
                 "[Short note highlighting FastMCP + pgvector RBAC demo + Inspira distributed systems]"
-                ### Special Instructions
+                                ### Special Instructions
+                - SEARCH ONLY LINKEDIN. Use the specific query provided in the strategy section.
+                                - THOROUGHNESS: You must exhaustively search through the first 10 pages of results (approx. 100 entries) to ensure no matching roles are missed.
+                - RECENCY: Ensure you are looking at the "Date Posted" field on LinkedIn. Only include jobs from the last 7 days.
+                - Extract the direct LinkedIn job URL (linkedin.com/jobs/view/XXXXX format) from each result.
+
+
                 - Be aggressive with disqualifications. If a role is a "Core ML" trap (PyTorch/Model Training) or a "Consulting" trap, kill it immediately.
                 - For roles with unlisted compensation, mark Gate 3 as "⚠️ UNKNOWN" but do not automatically disqualify if the role passes Gates 0, 1, and 2 and looks like a Principal/Staff level role.
                 - Flag roles that explicitly mention MCP, FastMCP, AI Gateway, or Identity for AI Agents—these are absolute gold mines.
@@ -121,10 +146,11 @@ def build_crew() -> Crew:
                 ### Begin Search
                 Search LinkedIn for roles matching the criteria above. Apply the Hard Gates first, then evaluate and score each role. Return results in the specified output format.
                 """,
-                expected_output=(
+                                expected_output=(
                     "A filtered, scored list of LinkedIn job postings according to the specified "
                     "Structured Output Format. Only roles passing all Hard Gates (Location, "
-                    "Employment Nature, Technical Discipline, Compensation) are included."
+                    "Employment Nature, Technical Discipline, Compensation, and Recency < 7 days) "
+                    "are included."
                 ),
                 agent=job_researcher,
             )
@@ -138,11 +164,15 @@ def run():
     print("\n" + line)
     print("💼 LINKEDIN JOB SEARCH — PRINCIPAL AI PLATFORM ENGINEERING ROLES")
     print(line)
-    print("   Titles: Principal AI Platform Engineer | Staff AI Infrastructure | Enterprise AI Platform Architect")
-    print("   Location: 100% Remote (US) or Hybrid in Greater Chicago (CST)")
+    print("   Titles: Principal AI Platform Engineer | Principal AI Systems Architect | Staff Software/Platform Engineer")
+    print("   Location: 100% Remote (US)")
+    print("   Tech: MCP/FastMCP, pgvector, AI Gateway, RAG, Python/.NET/C#")
     print("   Scope: In-house IC only, $140k+ base, no consulting/pre-sales/core ML research")
-    print("   [Posted: Last 7 days]")
+    print("   Recency: Posted within the last 7 days")
+    print("   [Search Depth: First 10 pages / ~100 results]")
+
     print(line + "\n")
+
     print("🔍 Searching LinkedIn with Hard Gates, scoring rubric, and red-flag filters...\n")
 
     result = build_crew().kickoff()
