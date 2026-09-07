@@ -1,9 +1,0 @@
-.venv/
-__pycache__/
-*.pyc
-.env
-*.log
-drive_relocation_analysis.json
-relocation_recommendations.csv
-job_search_results_*.txt
-job_search_results_*.md

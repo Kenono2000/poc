@@ -98,3 +98,9 @@ marimo/_lsp/
 __marimo__/
 .streamlit/
 .abstra/
+*.log
+drive_relocation_analysis.json
+relocation_recommendations.csv
+job_search_results_*.txt
+job_search_results_*.md
+service_account.json
