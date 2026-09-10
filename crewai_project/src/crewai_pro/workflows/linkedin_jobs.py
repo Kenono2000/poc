@@ -1,6 +1,6 @@
 """Workflow 4 — LinkedIn Principal/Staff AI Platform job search."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from crewai import Agent, Crew, Process, Task
 from crewai_tools import SerperDevTool
@@ -105,24 +105,25 @@ def build_crew() -> Crew:
 STAGE 1 — DISCOVERY (job_discovery_scout)
 
 You are a senior technical executive recruiter acting on behalf of Ken Wong, a Principal AI
-Platform Engineer and Enterprise Solutions Architect. Search EXCLUSIVELY on
-linkedin.com/jobs using the following targeted Boolean query. Focus ONLY on jobs posted
-within the past 7 days. Exhaust the first 10 pages of results (~100 entries).
+Platform Engineer and Enterprise Solutions Architect. Search live job sources, prioritizing
+linkedin.com/jobs and employer ATS pages, using the following decoupled Boolean query. Focus
+ONLY on jobs posted or reposted within the past 30 days, prioritizing the last 24–48 hours.
+When high-signal protocol or runtime terms are present, do not add a programming-language
+filter; allow Python, Go, Java, C#, and TypeScript.
 
-### Boolean Query (LinkedIn)
-site:linkedin.com/jobs ("Principal AI Platform Engineer" OR "Principal AI Systems
-Architect" OR "Staff Software Engineer" OR "Staff Platform Engineer") AND
-("Model Context Protocol" OR "FastMCP" OR "MCP" OR "pgvector" OR "AI Gateway" OR "RAG")
-AND ("Python" OR ".NET" OR "C#") AND ("Remote" OR "Remote US" OR "100% Remote") NOT
-("Consultant" OR "Agency" OR "Staffing" OR "Pre-Sales" OR "Solutions Architect" OR
-"PyTorch" OR "RecSys")
+### Boolean Query
+("Staff" OR "Principal") AND ("Software Engineer" OR "Platform Engineer" OR "AI
+Architect") AND ("Model Context Protocol" OR "FastMCP" OR "MCP tooling" OR "Agentic"
+OR "AI Gateway" OR "Agent Runtime") AND ("Remote" OR "Remote US") NOT ("Consultant"
+OR "Agency" OR "Staffing" OR "Pre-Sales" OR "On-site" OR "Onsite" OR "In-office" OR
+"In office")
 
 ### Candidate Profile & Architectural Moats
 - Identity & Track: Principal Systems Engineer & AI Platform Architect (20+ years
   high-concurrency backends, enterprise IAM, and applied sovereign GenAI platform
   engineering).
-- Target Roles: Principal AI Platform Engineer, Staff Software Engineer (AI
-  Infrastructure/Gateway), Enterprise AI Platform Architect.
+- Target Roles: Staff / Principal Software Engineer, Staff / Principal Platform Engineer,
+  Principal AI Systems Architect.
 - Tech Stack (The Enterprise AI Triad):
   * AI Orchestration: FastMCP (Model Context Protocol), pgvector (HNSW), Sovereign RAG,
     LangChain, DSPy, Local LLMs (Ollama/Hermes), Langfuse.
@@ -132,11 +133,8 @@ AND ("Python" OR ".NET" OR "C#") AND ("Remote" OR "Remote US" OR "100% Remote") 
   * Distributed Backends: Python (FastAPI, Pydantic DTOs, asyncpg), C#/.NET (.NET Core
     through .NET 8/10), Clean Architecture, RabbitMQ Event Sourcing, MongoDB Distributed
     Locking, Docker, Azure Pipelines.
-- Live Demos (Primary Differentiators):
-  * FastMCP Agent Endpoint: https://enterprise-rag-mcp.fastmcp.app/mcp
-  * Interactive UI: https://enterprise-rag-pgvector-rbac.streamlit.app
-  * OpenAPI / Swagger: https://enterprise-rag-api-ksez.onrender.com/docs
-  * GitHub Source: https://github.com/Kenono2000/enterprise-rag-pgvector-rbac
+- Reference Implementation (always include in outreach):
+  https://github.com/Kenono2000/enterprise-rag-pgvector-rbac
 
 ### Deliverable
 Return a raw JSON array (do NOT score yet) of every LinkedIn job result found, using this
@@ -155,8 +153,8 @@ schema per entry:
   ...
 ]
 
-Do NOT filter or score at this stage — that is the auditor's job. Just harvest everything
-the Boolean query returns within the first 10 pages.
+Do NOT filter or score at this stage — that is the auditor's job. Capture source evidence
+for work model, employment type, compensation, and posting date whenever available.
 """,
                 expected_output=(
                     "A raw JSON array of all LinkedIn job results from the Boolean query "
@@ -172,37 +170,45 @@ STAGE 2 — COMPLIANCE & DEDUP (compliance_dedup_auditor)
 You receive the raw JSON array of job results from Stage 1. Your job is to enforce the
 strict compliance filters and deduplicate against the tracking data.
 
-### Hard Gates Applied
+### Hard Gates Applied (all are mandatory)
 **Gate 0: Location & Work Model**
-- MUST be 100% Remote (US-based) OR Hybrid located exclusively within Greater Chicago (CST).
-- DISQUALIFY: Any role requiring 1+ days onsite outside Greater Chicago (e.g., NYC, SF,
-  Seattle, Austin).
-- DISQUALIFY: Any role requiring regular client-site or non-local travel (>15%).
-- DISQUALIFY: Regional remote postings that explicitly exclude Illinois residents.
+- MUST be 100% Remote in the US/Americas OR located in Greater Chicago.
+- DISQUALIFY any mandatory onsite or hybrid requirement outside Greater Chicago, and any
+  posting that explicitly excludes Illinois residents from a remote role.
 
 **Gate 1: Employment Nature & Business Model**
-- MUST be direct-hire, permanent, full-time employee (FTE) on an in-house product or
+- MUST be direct-hire permanent FTE or contract-to-hire (C2H) IC on an in-house product or
   internal platform team.
 - DISQUALIFY: Third-party staffing agencies, talent brokers, recruiting intermediaries ("for
   our client"), or staff augmentation.
 - DISQUALIFY: Consultancies, professional services, digital agencies, systems integrators,
   or client-billable delivery.
-- DISQUALIFY: Customer-facing delivery, pre-sales engineering, forward-deployed engineering
-  (FDE), or post-sales solutions architecture.
-- DISQUALIFY: Pure people-management tracks (Engineering Manager, Director with direct
-  reports, hiring/budget administration).
+- DISQUALIFY: Customer-facing delivery, pre-sales, forward-deployed engineering, or
+  post-sales solutions architecture.
+- DISQUALIFY: Pure people-management tracks.
+
+**Gate 2: Technical Focus**
+- MUST center on core platform engineering, agent runtimes, AI gateways, distributed
+  systems, or developer infrastructure.
+- DISQUALIFY pure statistical data science or prompt-only engineering.
+
+**Gate 3: Compensation**
+- MUST disclose or provide verified market base salary of at least $140,000 USD. Unlisted
+  compensation is not a pass and must be rejected.
 
 **Dedup Registry Check**
-- Query the candidate's Google Sheet "apps" tab to verify the company has NOT already been
-  applied to. The sheet URL is: <INSERT_GOOGLE_SHEET_URL_HERE>.
-- Maintain an immutable registry of job appearances. Reject any listing whose
-  job_url or company has already appeared 3 or more times across all prior search sessions.
-- If the Google Sheet URL is not yet configured, flag each entry with
-  "[DEDUP-PENDING]" and note it requires manual verification.
+- Before presenting any role, read Google Sheet ID
+  `1TVBZTkj5cHt2nMXt5aQPtu8f8u0bf2E29ilCKviBLUk`, tab `apps`. Extract every existing
+  company name and applied title; reject any role from an existing company immediately.
+- Maintain an immutable per-job appearance registry across updates. Reject any job that
+  has appeared 3 or more times and permanently retire it. Never return a job more than
+  3 times.
+- If the sheet or registry cannot be read, return no roles and report the blocker. Do not
+  use a PENDING status as a substitute for deduplication.
 
 ### Recency Filter
-- MUST be posted within the last 7 days.
-- DISQUALIFY: Any posting older than 7 days.
+- MUST be posted or reposted within the last 30 days.
+- DISQUALIFY: Any posting older than 30 days or with no reliable recency evidence.
 
 ### Deliverable
 Return a JSON array of jobs that PASS all compliance filters, using this schema:
@@ -216,18 +222,18 @@ Return a JSON array of jobs that PASS all compliance filters, using this schema:
     "date_posted": "<Date Posted>",
     "compensation": "<Range or 'Unlisted'>",
     "raw_snippet": "<First 500 chars>",
-    "dedup_status": "NEW" | "PENDING_GOOGLE_SHEET_CHECK" | "REJECTED_ALREADY_APPLIED" |
+    "dedup_status": "NEW" | "REJECTED_ALREADY_APPLIED" |
                     "REJECTED_APPEARANCE_CAP",
     "gate_rejections": ["Gate 0: <brief reason>", "Gate 1: <brief reason>"]
   },
   ...
 ]
 
-Only include entries with dedup_status of "NEW" or "PENDING_GOOGLE_SHEET_CHECK".
-Reject any job that fails a hard gate or exceeds the appearance ceiling.
+Only include entries with dedup_status of "NEW". Reject any job that fails a hard gate,
+belongs to an existing company, or exceeds the appearance ceiling.
 """,
                 expected_output=(
-                    "A JSON array of compliant job results that passed Gates 0, 1, and 4, "
+                    "A JSON array of compliant job results that passed all five hard gates, "
                     "deduplicated against the Google Sheet registry and 3-appearance ceiling."
                 ),
                 agent=compliance_dedup_auditor,
@@ -240,21 +246,22 @@ You receive the filtered JSON array from Stage 2. For each job, apply the scorin
 and hard gates below. If ANY hard gate fails, immediately DISQUALIFY — do not score.
 
 ### Hard Gates (reconfirm)
-- Gate 0 (Remote / Greater Chicago): ✅ PASS / ❌ FAIL
+- Gate 0 (100% Remote US/Americas or Greater Chicago): ✅ PASS / ❌ FAIL
 - Gate 1 (In-House FTE IC): ✅ PASS / ❌ FAIL
 - Gate 2 (Platform vs. Core ML): ✅ PASS / ❌ FAIL
   - DISQUALIFY: Core Machine Learning Research, Applied Scientist, Model Training (PyTorch/
     TensorFlow weight training, LLM fine-tuning, quantization/MoE research, PhD/pub reqs).
   - DISQUALIFY: Recommender Systems (RecSys), Search Ranking, tabular predictive modeling.
-- Gate 3 (Compensation >= $140k): ✅ PASS / ❌ FAIL / ⚠️ UNLISTED
-- Gate 4 (Recency < 7 days): ✅ PASS / ❌ FAIL
+- Gate 3 (Disclosed/verified base >= $140k): ✅ PASS / ❌ FAIL
+- Gate 4 (Posted/reposted within 30 days): ✅ PASS / ❌ FAIL
 
 ### Scoring Rubric (10-Point System)
 | Dimension | Weight | Scoring |
 | :--- | :--- | :--- |
 | Platform & Stack Synergy | 40% | 10/10 = MCP/FastMCP + pgvector/RAG + Python/FastAPI or C#/.NET + Distributed Systems.<br>7/10 = AI Gateway/Platform + Python/Cloud but no direct MCP.<br>0/10 = Core ML training, PyTorch, RecSys, frontend-heavy. |
 | Architectural Scope & IC Track | 30% | 10/10 = Hands-on Principal/Staff IC owning core platform runtime and paved roads.<br>7/10 = Senior Staff IC with high governance/advisory focus.<br>0/10 = People management, client delivery, pre-sales. |
-| Location & Business Model | 30% | 10/10 = Explicitly 100% Remote or Greater Chicago hybrid at in-house product company.<br>7/10 = Remote US but location tax eligibility requires screen check.<br>0/10 = Agency, consulting, travel >15%, mandatory non-Chicago onsite. |
+| Location & Business Model | 20% | 10/10 = Explicitly 100% Remote US/Americas or Greater Chicago at an in-house product company.<br>7/10 = Remote scope needs minor verification.<br>0/10 = Agency, consulting, or mandatory non-Chicago onsite. |
+| Compensation & Stage | 10% | 10/10 = Base is $170k–$260k+ with credible equity/stage.<br>7/10 = Base is $140k–$169k or equity/stage is unclear. |
 
 ### Output Format
 For each remaining job, produce:
@@ -263,35 +270,36 @@ For each remaining job, produce:
 **Job URL:** [linkedin.com/jobs/view/XXXXX]
 **Disclosed Base Compensation:** [Range or "Unlisted"]
 **Hard Gates Check:**
-- Gate 0 (Remote / Chicago): ✅ PASS / ❌ FAIL ([note])
+- Gate 0 (Remote US/Americas or Greater Chicago): ✅ PASS / ❌ FAIL ([note])
 - Gate 1 (In-House FTE IC): ✅ PASS / ❌ FAIL ([note])
 - Gate 2 (Platform vs. Core ML): ✅ PASS / ❌ FAIL ([note])
-- Gate 3 (Compensation >= $140k): ✅ PASS / ❌ FAIL / ⚠️ UNLISTED
-- Gate 4 (Recency < 7 days): ✅ PASS / ❌ FAIL ([date])
+- Gate 3 (Disclosed/verified base >= $140k): ✅ PASS / ❌ FAIL ([note])
+- Gate 4 (Posted/reposted within 30 days): ✅ PASS / ❌ FAIL ([date])
 **Scorecard:**
 | Dimension | Score | Notes |
 | :--- | :--- | :--- |
 | Platform & Stack Synergy | X/10 | [notes] |
 | Architectural Scope & IC Track | X/10 | [notes] |
 | Location & Business Model | X/10 | [notes] |
+| Compensation & Stage | X/10 | [notes] |
 | **Weighted Overall Score** | **X.X / 10** | |
-**Verdict:** 🟢 TIER 1 IMMEDIATE PURSUIT (≥9.0) | 🟡 CONDITIONAL PURSUIT (7.5–8.9) | ❌ DISQUALIFIED (<7.5 or any gate failed)
+**Verdict:** 🟢 TIER 1 IMMEDIATE PURSUIT (≥9.0) | 🟡 TIER 2 TRACKING PIPELINE (8.0–8.9) | ❌ DISQUALIFIED (<8.0 or any gate failed)
 **Strategic Rationale:** [2-3 sentences]
 
 ### Summary
-Conclude with a ranked summary table of all Tier 1 and Conditional jobs:
+Conclude with a ranked summary table of all Tier 1 and Tier 2 jobs:
 
 | Rank | Company | Title | Score | Tier |
 | :--- | :--- | :--- | :--- | :--- |
 | 1 | ... | ... | 9.7 | TIER 1 |
 | ... | ... | ... | ... | ... |
 
-Jobs scoring below 7.5 or failing any hard gate are EXCLUDED from the summary.
+Jobs scoring below 8.0 or failing any hard gate are EXCLUDED from the summary.
 """,
                 expected_output=(
                     "A structured evaluation with scorecard, verdict, and strategic rationale "
                     "for each compliant job, plus a ranked summary table of Tier 1 and "
-                    "Conditional roles."
+                    "Tier 2 roles."
                 ),
                 agent=technical_fit_evaluator,
             ),
@@ -308,20 +316,22 @@ report and dispatch it via email to kenono2000@gmail.com.
    - LinkedIn connection note (<300 characters): Peer-to-peer, no buzzwords. Lead with
      concrete reference architectures (FastMCP gateways, pgvector RAG, zero-trust IAM
      boundaries) and immediate business value.
-   - Email template: Subject line + body (mention FastMCP agent endpoint, pgvector RBAC
-     demo, GitHub source).
+   - Tailored hiring-manager email: subject + body highlighting Ken's 20+ years of
+     distributed systems experience and always linking
+     https://github.com/Kenono2000/enterprise-rag-pgvector-rbac.
 
-2. **Conditional Pursuance Notes** (for each Conditional role):
+2. **Tier 2 Tracking Notes** (for each Tier 2 role):
    - Brief gating script to use in initial screens.
    - Recommended follow-up angle.
 
-3. **Dispatch Instructions**:
-   Format the complete report as a single markdown document. Since the email recipient is
-   kenono2000@gmail.com, provide a pre-addressed email template block at the end with:
+3. **Email Dispatch**:
+  Dispatch the formatted digest directly to kenono2000@gmail.com. Produce both a plain
+  text version and a rich HTML version. Include pre-addressed blocks with:
    - To: kenono2000@gmail.com
    - Subject: "Job Search Report — [Date]"
    - Body: Executive summary (count of roles, Tier 1 highlights, any blockers).
-   - Attachment references: include the ranked summary table and all outreach templates.
+   - Body: executive summary, ranked summary table, all outreach templates, and blockers.
+     The plain text and HTML versions must contain the same information.
 
 ### Example Outreach Note Template (<300 chars)
 "Hi [Name], saw the [Title] req at [Company] — built a FastMCP agent endpoint with
@@ -337,10 +347,9 @@ I just submitted my application for the [Job Title] role at [Company]. The focus
 [key technical area from JD] aligns perfectly with my background building sovereign
 GenAI platforms at enterprise scale.
 
-My reference implementation (github.com/Kenono2000/enterprise-rag-pgvector-rbac) ships:
-- FastMCP agent endpoint: https://enterprise-rag-mcp.fastmcp.app/mcp
-- pgvector + RLS-based in-database RBAC for multi-tenant isolation
-- Zero-trust IAM boundary (OAuth 2.0 PKCE + Okta SSO) in-front of the LLM gateway
+My reference implementation is https://github.com/Kenono2000/enterprise-rag-pgvector-rbac.
+It demonstrates FastMCP tooling, pgvector/RLS-based RBAC for tenant isolation, and
+zero-trust IAM boundaries in front of an AI gateway.
 
 I'd welcome a brief conversation to discuss how this architecture can accelerate
 [Company]'s AI platform roadmap.
@@ -350,13 +359,16 @@ Ken Wong
 Principal AI Systems Architect
 
 ### Final Output
-Produce the complete dispatch-ready report combining all Tier 1 outreach packs, conditional
-notes, and the email template block addressed to kenono2000@gmail.com.
+Produce the complete dispatch-ready report combining all Tier 1 outreach packs, Tier 2
+tracking notes, and both plain-text and rich-HTML email blocks addressed to
+kenono2000@gmail.com. If actual email dispatch is unavailable, state that explicitly as a
+blocker instead of claiming it was sent.
 """,
                 expected_output=(
                     "A complete, dispatch-ready markdown report: Tier 1 outreach packs with "
-                    "LinkedIn notes (<300 chars) and email templates, conditional pursuance "
-                    "notes, and a pre-addressed email template block for kenono2000@gmail.com."
+                    "LinkedIn notes (<300 chars), hiring-manager emails, Tier 2 notes, and "
+                    "matching plain-text and rich-HTML email digest blocks addressed to "
+                    "kenono2000@gmail.com."
                 ),
                 agent=executive_outreach_strategist,
             ),
@@ -375,7 +387,7 @@ def run():
     print("   Location: 100% Remote (US)")
     print("   Tech: MCP/FastMCP, pgvector, AI Gateway, RAG, Python/.NET/C#")
     print("   Scope: In-house IC only, $140k+ base, no consulting/pre-sales/core ML research")
-    print("   Recency: Posted within the last 7 days")
+    print("   Recency: Posted or reposted within the last 30 days")
     print("   [Search Depth: First 10 pages / ~100 results]")
     print(line)
     print("   Agents:")
@@ -389,7 +401,7 @@ def run():
 
     result = build_crew().kickoff()
 
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"job_search_results_{timestamp}.md"
     with open(filename, "w", encoding="utf-8") as f:
         f.write(str(result))
