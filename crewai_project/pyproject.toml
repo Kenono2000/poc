@@ -13,6 +13,8 @@ dependencies = [
     "crewai-tools>=0.4.0",
     "python-dotenv>=1.0.0",
     "pyyaml",
+    "gspread>=6.0",
+    "google-auth>=2.20",
 ]
 
 [project.optional-dependencies]

@@ -3,7 +3,9 @@
 from datetime import datetime, timezone
 
 from crewai import Agent, Crew, Process, Task
-from crewai_tools import SerperDevTool
+from crewai_tools import ScrapeWebsiteTool, SerperDevTool
+
+from crewai_pro.tools import EmailDispatchTool, GoogleSheetsTrackerTool
 
 from .base import Workflow
 
@@ -28,7 +30,7 @@ job_discovery_scout = Agent(
         "for individual contributor (IC) roles focusing on autonomous agent execution "
         "environments, model routing, and distributed backend platform architecture."
     ),
-    tools=[SerperDevTool()],
+    tools=[SerperDevTool(), ScrapeWebsiteTool()],
     verbose=True,
     allow_delegation=False,
 )
@@ -48,6 +50,7 @@ compliance_dedup_auditor = Agent(
         "or hybrid/on-site positions. You maintain an immutable registry of job appearances "
         "and reject any listing that violates location criteria or the 3-appearance ceiling."
     ),
+    tools=[GoogleSheetsTrackerTool()],
     verbose=True,
     allow_delegation=False,
 )
@@ -86,6 +89,7 @@ executive_outreach_strategist = Agent(
         "concrete reference architectures (FastMCP gateways, pgvector RAG, zero-trust IAM "
         "boundaries) and immediate business value."
     ),
+    tools=[EmailDispatchTool()],
     verbose=True,
     allow_delegation=False,
 )
@@ -106,17 +110,41 @@ STAGE 1 — DISCOVERY (job_discovery_scout)
 
 You are a senior technical executive recruiter acting on behalf of Ken Wong, a Principal AI
 Platform Engineer and Enterprise Solutions Architect. Search live job sources, prioritizing
-linkedin.com/jobs and employer ATS pages, using the following decoupled Boolean query. Focus
-ONLY on jobs posted or reposted within the past 30 days, prioritizing the last 24–48 hours.
+open ATS portals (Greenhouse, Lever, Ashby, Workable, JazzHR) and company career pages where
+job specs and salary disclosures are fully public and indexable, plus linkedin.com/jobs. Use
+the following decoupled Google Boolean query. Focus ONLY on jobs posted or reposted within the
+past 30 days, prioritizing the last 24–48 hours. When high-signal protocol or runtime terms
+are present, do not add a programming-language filter; allow Python, Go, Java, C#, and
+TypeScript.
+
+### Target ATS Portals
+Prefer results from these indexable job boards; they surface the full posting
+text and salary band so the auditor and evaluator can apply the hard gates:
+- site:boards.greenhouse.io
+- site:jobs.lever.co
+- site:jobs.ashbyhq.com
+- site:workable.com
+- site:jazzhr.com
+- careers pages of FAANG+ and high-growth AI infra companies
+
+### Boolean Query (Google-native, no NOT-grouping)
+("Staff" OR "Principal") AND ("Software Engineer" OR "Platform Engineer"
+OR "AI Architect") AND ("Model Context Protocol" OR "FastMCP" OR "MCP"
+OR "Agentic" OR "AI Gateway" OR "Agent Runtime") AND ("100% Remote"
+OR "Remote US") -Consultant -Agency -Staffing -Recruiter -"Pre-Sales"
+-On-site -Onsite -"In-office" -"In office" -Contractor -Vendor
+
+### Scraping Protocol
+After harvesting the SERP, for every ATS/career-page job link:
+1. Call ScrapeWebsiteTool on the job URL.
+2. Extract the full description, work model (remote/hybrid/onsite),
+   employment type (FTE / C2H / contractor), posting date, and any
+   disclosed compensation/salary band.
+3. Fold those values into the JSON entry's raw_snippet and compensation
+   fields so downstream gates have source evidence.
+
 When high-signal protocol or runtime terms are present, do not add a programming-language
 filter; allow Python, Go, Java, C#, and TypeScript.
-
-### Boolean Query
-("Staff" OR "Principal") AND ("Software Engineer" OR "Platform Engineer" OR "AI
-Architect") AND ("Model Context Protocol" OR "FastMCP" OR "MCP tooling" OR "Agentic"
-OR "AI Gateway" OR "Agent Runtime") AND ("Remote" OR "Remote US") NOT ("Consultant"
-OR "Agency" OR "Staffing" OR "Pre-Sales" OR "On-site" OR "Onsite" OR "In-office" OR
-"In office")
 
 ### Candidate Profile & Architectural Moats
 - Identity & Track: Principal Systems Engineer & AI Platform Architect (20+ years
@@ -137,8 +165,9 @@ OR "Agency" OR "Staffing" OR "Pre-Sales" OR "On-site" OR "Onsite" OR "In-office"
   https://github.com/Kenono2000/enterprise-rag-pgvector-rbac
 
 ### Deliverable
-Return a raw JSON array (do NOT score yet) of every LinkedIn job result found, using this
-schema per entry:
+Return a raw JSON array (do NOT score yet) of every job result found from the
+Boolean query, using this schema per entry. The job_url may be a LinkedIn URL or
+any ATS/career-page URL harvested via the Scraping Protocol above.
 
 [
   {
@@ -156,11 +185,12 @@ schema per entry:
 Do NOT filter or score at this stage — that is the auditor's job. Capture source evidence
 for work model, employment type, compensation, and posting date whenever available.
 """,
-                expected_output=(
-                    "A raw JSON array of all LinkedIn job results from the Boolean query "
-                    "(~100 entries), each with title, company, job_url, location, "
-                    "date_posted, compensation, and raw_snippet."
-                ),
+                 expected_output=(
+                     "A raw JSON array of all job results from the ATS-targeting Boolean "
+                     "query (~100 entries), each with title, company, job_url, location, "
+                     "date_posted, compensation, and raw_snippet (enriched with scraped "
+                     "full-description evidence)."
+                 ),
                 agent=job_discovery_scout,
             ),
             Task(
@@ -197,14 +227,16 @@ strict compliance filters and deduplicate against the tracking data.
   compensation is not a pass and must be rejected.
 
 **Dedup Registry Check**
-- Before presenting any role, read Google Sheet ID
-  `1TVBZTkj5cHt2nMXt5aQPtu8f8u0bf2E29ilCKviBLUk`, tab `apps`. Extract every existing
-  company name and applied title; reject any role from an existing company immediately.
-- Maintain an immutable per-job appearance registry across updates. Reject any job that
-  has appeared 3 or more times and permanently retire it. Never return a job more than
-  3 times.
-- If the sheet or registry cannot be read, return no roles and report the blocker. Do not
-  use a PENDING status as a substitute for deduplication.
+- Before presenting any role, call GoogleSheetsTrackerTool with spreadsheet_id
+  `1TVBZTkj5cHt2nMXt5aQPtu8f8u0bf2E29ilCKviBLUk` and tab `apps`. Extract every
+  existing company name and applied title; reject any role from an existing
+  company immediately.
+- Maintain an immutable per-job appearance registry across updates. Reject any job
+  that has appeared 3 or more times and permanently retire it. Never return a job
+  more than 3 times.
+- If the Google Sheets tracker cannot be read (credentials missing or sheet
+  inaccessible), treat it as a hard BLOCKER: return no roles and report the blocker.
+  Do not use a PENDING status as a substitute for deduplication.
 
 ### Recency Filter
 - MUST be posted or reposted within the last 30 days.
@@ -325,13 +357,18 @@ report and dispatch it via email to kenono2000@gmail.com.
    - Recommended follow-up angle.
 
 3. **Email Dispatch**:
-  Dispatch the formatted digest directly to kenono2000@gmail.com. Produce both a plain
-  text version and a rich HTML version. Include pre-addressed blocks with:
-   - To: kenono2000@gmail.com
-   - Subject: "Job Search Report — [Date]"
-   - Body: Executive summary (count of roles, Tier 1 highlights, any blockers).
-   - Body: executive summary, ranked summary table, all outreach templates, and blockers.
-     The plain text and HTML versions must contain the same information.
+   Dispatch the formatted digest directly to kenono2000@gmail.com by invoking
+   the EmailDispatchTool. Build both a plain-text and a rich-HTML version that
+   contain identical information. Construct the message with:
+    - To: kenono2000@gmail.com
+    - Subject: "Job Search Report — [Date]"
+    - Body: Executive summary (count of roles, Tier 1 highlights, any blockers).
+    - Body: executive summary, ranked summary table, all outreach templates,
+      and blockers.
+   Call EmailDispatchTool(recipient=..., subject=..., text_body=...,
+   html_body=...) to perform the actual send. If SMTP credentials are missing
+   or the send fails, report the blocker explicitly rather than claiming it was
+   sent.
 
 ### Example Outreach Note Template (<300 chars)
 "Hi [Name], saw the [Title] req at [Company] — built a FastMCP agent endpoint with
@@ -391,10 +428,10 @@ def run():
     print("   [Search Depth: First 10 pages / ~100 results]")
     print(line)
     print("   Agents:")
-    print("   [1] job_discovery_scout        — LinkedIn Boolean search & raw harvest")
-    print("   [2] compliance_dedup_auditor   — Remote gate + Google Sheet dedup + 3-cap")
+    print("   [1] job_discovery_scout        — ATS Boolean search + ScrapeWebsiteTool harvest")
+    print("   [2] compliance_dedup_auditor   — Remote gate + Google Sheets dedup + 3-cap")
     print("   [3] technical_fit_evaluator     — Scoring rubric + hard-gate disqualification")
-    print("   [4] executive_outreach_strategist — Outreach templates + email to kenono2000@gmail.com")
+    print("   [4] executive_outreach_strategist — Outreach templates + EmailDispatchTool dispatch")
     print(line + "\n")
 
     print("🔍 Launching 4-agent sequential crew (Scout → Auditor → Evaluator → Dispatcher)...\n")
