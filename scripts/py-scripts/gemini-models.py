@@ -189,9 +189,10 @@ def run_tests(models):
             res = future.result()
             results.append(res)
             
-            # Real-time console output
-            status_tag = f"[{res['status']}]".ljust(12)
-            print(f"{status_tag} | Latency: {res['latency'].rjust(6)} | Model: {res['model']}")
+            # Real-time console output - ONLY for working models
+            if res['status'] == 'RESPONDED':
+                status_tag = f"[{res['status']}]".ljust(12)
+                print(f"{status_tag} | Latency: {res['latency'].rjust(6)} | Model: {res['model']}")
 
     # Print Summary Report
     print("\n" + "="*80)
