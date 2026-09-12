@@ -4,10 +4,14 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configuration
-NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY")
-BASE_URL = "https://integrate.api.nvidia.com/v1"
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
+BASE_URL = "https://api.openai.com/v1"
 MODELS_ENDPOINT = f"{BASE_URL}/models"
 CHAT_ENDPOINT = f"{BASE_URL}/chat/completions"
 
@@ -15,44 +19,62 @@ CHAT_ENDPOINT = f"{BASE_URL}/chat/completions"
 TEST_PROMPT = "Reply with 'OK'."
 MAX_TOKENS = 10
 TIMEOUT_SECONDS = 10
-MAX_CONCURRENT_TESTS = 5  # Prevents hitting rate limits during bulk test
+MAX_CONCURRENT_TESTS = 5 
 
 def verify_api_key():
-    if not NVIDIA_API_KEY or not NVIDIA_API_KEY.startswith("nvapi-"):
-        print("[ERROR] NVIDIA_API_KEY is missing or invalid.")
-        print("Please set it in your environment: export NVIDIA_API_KEY='nvapi-...'")
+    if not OPENAI_API_KEY:
+        print("[ERROR] OPENAI_API_KEY is missing.")
+        print("Please set it in your .env file or environment: export OPENAI_API_KEY='sk-...'")
         sys.exit(1)
 
-def get_nvidia_models():
-    """Fetches the list of all available models from NVIDIA API Catalog."""
+def get_openai_models():
+    """Fetches the list of all available models from OpenAI API."""
     headers = {
-        "Authorization": f"Bearer {NVIDIA_API_KEY}",
-        "Accept": "application/json"
+        "Authorization": f"Bearer {OPENAI_API_KEY}"
     }
     
-    print("[1/2] Fetching model catalog from NVIDIA API...")
+    print("[1/2] Fetching model list from OpenAI API...")
     try:
         response = requests.get(MODELS_ENDPOINT, headers=headers, timeout=15)
-        response.raise_for_status()
+        
+        if response.status_code != 200:
+            print(f"[ERROR] API returned status {response.status_code}")
+            print(f"        Message: {response.text[:200]}")
+            return []
+            
         data = response.json()
         
-        # Parse model IDs from standard OpenAI-compatible response format
+        # Filter for models - usually you want gpt models for chat
+        # But we can list all and let the test identify which support chat
         models = [model["id"] for model in data.get("data", [])]
+        
+        # Sort to put GPT models first for better visibility
+        models.sort(key=lambda x: (not x.startswith("gpt"), x))
+        
+        if not models:
+            print("[WARNING] No models found in the API response.")
+            return []
+            
         print(f"      Successfully retrieved {len(models)} models.\n")
         return models
+    except requests.exceptions.Timeout:
+        print("[ERROR] Request to fetch models timed out.")
+        return []
+    except requests.exceptions.ConnectionError:
+        print("[ERROR] Connection error occurred. Check your internet or API endpoint.")
+        return []
     except requests.exceptions.RequestException as e:
         print(f"[ERROR] Failed to fetch model list: {e}")
-        sys.exit(1)
-    except (KeyError, ValueError) as e:
+        return []
+    except (KeyError, ValueError, TypeError) as e:
         print(f"[ERROR] Failed to parse model list: {e}")
-        sys.exit(1)
+        return []
 
 def test_single_model(model_id):
     """Sends a minimal inference request to test model availability."""
     headers = {
-        "Authorization": f"Bearer {NVIDIA_API_KEY}",
-        "Content-Type": "application/json",
-        "Accept": "application/json"
+        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Content-Type": "application/json"
     }
     
     payload = {
@@ -76,23 +98,39 @@ def test_single_model(model_id):
         
         if response.status_code == 200:
             res_json = response.json()
-            content = res_json['choices'][0]['message']['content'].strip()
-            # Clean newlines for tidy table output
-            clean_content = content.replace("\n", " ")[:30] 
-            return {
-                "model": model_id,
-                "status": "RESPONDED",
-                "latency": f"{latency}s",
-                "code": 200,
-                "output": clean_content
-            }
+            try:
+                content = res_json['choices'][0]['message']['content'].strip()
+                # Clean newlines for tidy table output
+                clean_content = content.replace("\n", " ")[:30] 
+                return {
+                    "model": model_id,
+                    "status": "RESPONDED",
+                    "latency": f"{latency}s",
+                    "code": 200,
+                    "output": clean_content
+                }
+            except (KeyError, IndexError):
+                return {
+                    "model": model_id,
+                    "status": "UNEXPECTED_FORMAT",
+                    "latency": f"{latency}s",
+                    "code": 200,
+                    "output": str(res_json)[:100]
+                }
         else:
+            # Attempt to extract a cleaner error message
+            try:
+                error_data = response.json()
+                error_msg = error_data.get("error", {}).get("message", response.text)
+            except:
+                error_msg = response.text
+
             return {
                 "model": model_id,
                 "status": "FAILED",
                 "latency": f"{latency}s",
                 "code": response.status_code,
-                "output": response.text[:50]
+                "output": str(error_msg).replace("\n", " ")[:100]
             }
             
     except requests.exceptions.Timeout:
@@ -149,9 +187,21 @@ def run_tests(models):
         print("\nWorking Models:")
         for r in sorted(responded, key=lambda x: x['model']):
             print(f"  • {r['model']} ({r['latency']}) -> Output: {r['output']}")
+    
+    if failed:
+        print("\nTop Failed Models (Sample):")
+        # Show unique error messages to avoid spam
+        unique_errors = {}
+        for r in failed:
+            err_key = f"{r['code']}: {r['output']}"
+            if err_key not in unique_errors:
+                unique_errors[err_key] = r['model']
+        
+        for err, model in list(unique_errors.items())[:10]:
+            print(f"  • {model} -> Error {err}")
 
 if __name__ == "__main__":
     verify_api_key()
-    model_list = get_nvidia_models()
+    model_list = get_openai_models()
     if model_list:
         run_tests(model_list)
