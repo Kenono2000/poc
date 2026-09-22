@@ -1,4 +1,4 @@
-cd C:\source\dths-flutter\functions
+cd C:\src\dths-flutter\functions
 
 npm install -g firebase-tools
 npm install
@@ -13,4 +13,4 @@ gsutil cp -r gs://dths-test.firebasestorage.app/dths-test-export-from-gcloud C:\
 
 firebase emulators:start --import ./dths-test-export-from-gcloud --export-on-exit
 
-cd C:\source\POC\firestore-export
+cd C:\src\poc\apps\firestore-export
