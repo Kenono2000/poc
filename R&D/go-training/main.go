@@ -2,28 +2,46 @@ package main
 
 import "fmt"
 
-func average(numbers []float64) (float64, error) {
-	if len(numbers) == 0 {
-		return 0, fmt.Errorf("cannot calculate average of empty slice")
-	}
+func deferDemo() {
+    defer fmt.Println("Deferred 1")
+    defer fmt.Println("Deferred 2")
+    defer fmt.Println("Deferred 3")
+    fmt.Println("Function body")
+    // Output:
+    // Function body
+    // Deferred 3
+    // Deferred 2
+    // Deferred 1 (LIFO order)
+}
 
-	var total float64
-
-	for _, number := range numbers {
-		total += number
-	}
-
-	return total / float64(len(numbers)), nil
+func safeDivide(a, b int) (result int, err error) {
+    defer func() {
+        if r := recover(); r != nil {
+            err = fmt.Errorf("recovered from panic: %v", r)
+        }
+    }()
+    
+    if b == 0 {
+        panic("division by zero")
+    }
+    
+    return a / b, nil
 }
 
 func main() {
-	scores := []float64{80, 90, 75, 95}
-
-	result, err := average(scores)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
-
-	fmt.Printf("Average: %.2f\n", result)
+    deferDemo()
+    
+    result, err := safeDivide(10, 0)
+    if err != nil {
+        fmt.Println("Error:", err)
+    } else {
+        fmt.Println("Result:", result)
+    }
+    
+    result, err = safeDivide(10, 2)
+    if err != nil {
+        fmt.Println("Error:", err)
+    } else {
+        fmt.Println("Result:", result)
+    }
 }
