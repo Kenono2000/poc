@@ -1,0 +1,19 @@
+203 MacIntyre St, Lockport, IL 60441-2731
+
+---
+
+Hi [Name], I applied for [Principal Engineer - AI Platform] at [iHerb]. 20+ yrs in distributed systems; built a live FastMCP + pgvector RBAC gateway: github.com/Kenono2000/enterprise-rag-pgvector-rbac. I focus on Shift-Left security for safe-by-design AI. Thoughts on fit? Best, Ken
+
+---
+
+Hi {{First Name}},
+
+Thank you for reaching out and considering my profile.
+
+To ensure mutual alignment, I operate under a strict professional mandate. I exclusively consider full-time, direct-hire (or clear Contract-to-Hire with a guaranteed path to FTE) in-house product or platform engineering roles that are 100% Remote (US) or Hybrid in the Greater Chicago area.
+
+Can you confirm if this is an internal platform engineering role directly with a clear FTE conversion path? If so, please share the tech stack, compensation details, and full job description here. If there is strong technical synergy, I will be happy to share my resume and schedule a call.
+
+Best regards,Ken Wong
+
+---
