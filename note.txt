@@ -2,7 +2,7 @@
 
 ---
 
-Hi [Name], I applied for [Principal Engineer - AI Platform] at [iHerb]. 20+ yrs in distributed systems; built a live FastMCP + pgvector RBAC gateway: github.com/Kenono2000/enterprise-rag-pgvector-rbac. I focus on Shift-Left security for safe-by-design AI. Thoughts on fit? Best, Ken
+Hi [Name], I applied for [Sr Staff AI Platform Engineer] at [WEX]. 20+ yrs in distributed systems; built a live FastMCP + pgvector RBAC gateway: github.com/Kenono2000/enterprise-rag-pgvector-rbac. I focus on Shift-Left security for safe-by-design AI. Thoughts on fit? Best, Ken
 
 ---
 
