@@ -1,0 +1,59 @@
+name: ai
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    # Shared memory allocation to prevent OOM/crashes during large context and multi-process GPU execution
+    ipc: host
+    environment:
+      # Keep model loaded in VRAM indefinitely (prevents re-loading latency)
+      OLLAMA_KEEP_ALIVE: "-1"
+      # Enable Flash Attention (significantly reduces memory and improves generation speed for long contexts)
+      OLLAMA_FLASH_ATTENTION: "1"
+      # Number of parallel request slots (1 allocates max VRAM to single inference; increase for concurrency)
+      OLLAMA_NUM_PARALLEL: "1"
+      # Limit simultaneous models loaded in memory to prevent VRAM contention/paging
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      # Maximum tokens queued before backpressure/rejection
+      OLLAMA_MAX_QUEUE: "512"
+      # Uncomment to pin CPU execution threads if running hybrid or offloading layers to CPU
+      OLLAMA_NUM_THREADS: "8"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list > /dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  ollama-pull-model:
+    image: ollama/ollama:latest
+    container_name: ollama-pull-model
+    restart: "no"
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: ollama:11434
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        echo "Pulling qwen2.5 model..."
+        ollama pull qwen2.5
+        echo "Model pull complete."
+
+volumes:
+  ollama-data:

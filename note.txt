@@ -2,7 +2,7 @@
 
 ---
 
-Hi [Name], I applied for [Sr Staff AI Platform Engineer] at [WEX]. 20+ yrs in distributed systems; built a live FastMCP + pgvector RBAC gateway: github.com/Kenono2000/enterprise-rag-pgvector-rbac. I focus on Shift-Left security for safe-by-design AI. Thoughts on fit? Best, Ken
+Hi [], applied for [Staff Software Engineer - AI Compute] at [Together AI]. I combine 20 yrs of enterprise IAM/.NET/Python with sovereign GenAI. I build governed AI platforms-github.com/Kenono2000/enterprise-rag-pgvector-rbac. Let me know if my background aligns with your eng. roadmap. Best, Ken
 
 ---
 
