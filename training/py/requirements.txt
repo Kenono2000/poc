@@ -1,7 +1,0 @@
-asyncpg
-fastmcp
-numpy
-openai
-pydantic
-pytest
-redis
