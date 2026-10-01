@@ -1,19 +1,20 @@
 203 MacIntyre St, Lockport, IL 60441-2731
 
 ---
-
-Hi [], applied for [Staff Software Engineer - AI Compute] at [Together AI]. I combine 20 yrs of enterprise IAM/.NET/Python with sovereign GenAI. I build governed AI platforms-github.com/Kenono2000/enterprise-rag-pgvector-rbac. Let me know if my background aligns with your eng. roadmap. Best, Ken
+(300 chars)
+Hi [Name], applied for [Staff Eng - AI Compute] at [Together AI]. 20+ yrs building high-throughput backends + sovereign GenAI platforms (pgvector HNSW/FastMCP): github.com/Kenono2000/enterprise-rag-pgvector-rbac. Would love to connect on your compute roadmap. Best, Ken
 
 ---
 
 Hi {{First Name}},
 
-Thank you for reaching out and considering my profile.
+hanks for getting in touch.
 
-To ensure mutual alignment, I operate under a strict professional mandate. I exclusively consider full-time, direct-hire (or clear Contract-to-Hire with a guaranteed path to FTE) in-house product or platform engineering roles that are 100% Remote (US) or Hybrid in the Greater Chicago area.
+To ensure we’re aligned before jumping on a call, I am exclusively considering direct-hire FTE (or contract-to-hire with an explicit FTE path) for in-house engineering teams that are 100% Remote (US) or Hybrid in the Greater Chicago area.
 
-Can you confirm if this is an internal platform engineering role directly with a clear FTE conversion path? If so, please share the tech stack, compensation details, and full job description here. If there is strong technical synergy, I will be happy to share my resume and schedule a call.
+If the position aligns, please send over the job description, tech stack, and target compensation range. If it’s a fit, I’d be happy to connect.
 
-Best regards,Ken Wong
+Best,
+Ken Wong
 
 ---
