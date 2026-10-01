@@ -2,17 +2,30 @@
 
 ---
 (300 chars)
-Hi [Name], applied for [Staff Eng - AI Compute] at [Together AI]. 20+ yrs building high-throughput backends + sovereign GenAI platforms (pgvector HNSW/FastMCP): github.com/Kenono2000/enterprise-rag-pgvector-rbac. Would love to connect on your compute roadmap. Best, Ken
+Hi [], applied for [] at []. 20+ yrs building high-throughput backends + sovereign GenAI platforms (pgvector HNSW/FastMCP): github.com/Kenono2000/enterprise-rag-pgvector-rbac. Would love to connect on your compute roadmap. Best, Ken
 
 ---
 
-Hi {{First Name}},
+Hi [],
 
 hanks for getting in touch.
 
 To ensure we’re aligned before jumping on a call, I am exclusively considering direct-hire FTE (or contract-to-hire with an explicit FTE path) for in-house engineering teams that are 100% Remote (US) or Hybrid in the Greater Chicago area.
 
 If the position aligns, please send over the job description, tech stack, and target compensation range. If it’s a fit, I’d be happy to connect.
+
+Best,
+Ken Wong
+
+---
+
+Hi Alasdair,
+
+Thanks for the note. The role sounds like a strong fit for my background in data platform modernization and AI architecture, so I'd like to learn more.
+
+Could you send over the full job description along with details on the cloud stack, compensation range, and hybrid/on-site expectations? Also, is this a direct TCS role or tied to a specific client engagement?
+
+If everything lines up, I'm open to a conversation.
 
 Best,
 Ken Wong
