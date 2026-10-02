@@ -51,8 +51,8 @@ services:
       - /bin/sh
       - -c
       - |
-        echo "Pulling qwen2.5 model..."
-        ollama pull qwen2.5
+        echo "Pulling llama3.1:8b model..."
+        ollama pull llama3.1:8b
         echo "Model pull complete."
 
 volumes:
