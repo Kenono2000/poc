@@ -6,11 +6,27 @@ Hi [], applied for [Staff AI Engineer] at [Podium]. 20+ yrs building high-throug
 
 ---
 
-I am interested in data platform modernization and AI runtime architecture. I'm open to exploring both direct FTE and contract engagements. Could you send over the full JD, the cloud stack, the rate/comp band, and the hybrid office location? Also, please clarify whether this is an internal platform seat or an external client delivery engagement.
+I am interested in []. I'm open to exploring both direct FTE and contract engagements. Could you send over the full JD, the cloud stack, the rate/comp band, and the hybrid office location? Also, please clarify whether this is an internal platform seat or an external client delivery engagement.
 
 If everything aligns, I would be glad to set up a call.
 Best,Ken Wong
 
 ---
 
-accounts3@kinglyagency.com
+Datastax (Principal Platform Engineer – Vector & Agent Runtimes) — Direct alignment with FastMCP gateways, agent runtime loops, and vector databases.
+
+SandboxAQ (Staff Software Engineer, Platform & Large Quantitative Models) — Deep alignment with enterprise multi-tenant data governance and Zero-Trust isolation.
+
+Weights & Biases (Staff Platform Engineer – Enterprise Gateway & Model Governance) — Strong crossover with proxy token budgeting, rate limiting, and eval harnesses.
+
+Notion (Staff Software Engineer – Data Infrastructure & Permissions) — High-leverage fit for PostgreSQL multi-tenant sharding and in-database authorization/RBAC
+
+iManage (Principal SWE – Legal Search & Knowledge)
+
+Morningstar (Principal SWE – Market Data Platform)
+
+Caterpillar Digital (Principal SWE – Industrial Edge Telemetry)
+
+DISCO (Principal SWE – Legal AI Cloud Platform)   Braze (Staff SWE – Core Ingestion & Messaging)
+
+Braze (Staff SWE – Core Ingestion & Messaging)

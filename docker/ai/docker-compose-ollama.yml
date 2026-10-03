@@ -6,12 +6,13 @@ services:
     container_name: ollama
     restart: unless-stopped
     ports:
-      - "127.0.0.1:11434:11434"
+      - "11434:11434"
     volumes:
-      - ollama-data:/root/.ollama
+      - ollama:/root/.ollama
     # Shared memory allocation to prevent OOM/crashes during large context and multi-process GPU execution
     ipc: host
     environment:
+      OLLAMA_HOST: "0.0.0.0"
       # Keep model loaded in VRAM indefinitely (prevents re-loading latency)
       OLLAMA_KEEP_ALIVE: "-1"
       # Enable Flash Attention (significantly reduces memory and improves generation speed for long contexts)
@@ -56,4 +57,4 @@ services:
         echo "Model pull complete."
 
 volumes:
-  ollama-data:
+  ollama:
