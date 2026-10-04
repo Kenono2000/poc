@@ -13,20 +13,7 @@ Best,Ken Wong
 
 ---
 
-Datastax (Principal Platform Engineer – Vector & Agent Runtimes) — Direct alignment with FastMCP gateways, agent runtime loops, and vector databases.
-
-SandboxAQ (Staff Software Engineer, Platform & Large Quantitative Models) — Deep alignment with enterprise multi-tenant data governance and Zero-Trust isolation.
-
-Weights & Biases (Staff Platform Engineer – Enterprise Gateway & Model Governance) — Strong crossover with proxy token budgeting, rate limiting, and eval harnesses.
-
-Notion (Staff Software Engineer – Data Infrastructure & Permissions) — High-leverage fit for PostgreSQL multi-tenant sharding and in-database authorization/RBAC
-
-iManage (Principal SWE – Legal Search & Knowledge)
-
-Morningstar (Principal SWE – Market Data Platform)
-
-Caterpillar Digital (Principal SWE – Industrial Edge Telemetry)
-
-DISCO (Principal SWE – Legal AI Cloud Platform)   Braze (Staff SWE – Core Ingestion & Messaging)
+DISCO (Principal SWE – Legal AI Cloud Platform)
 
 Braze (Staff SWE – Core Ingestion & Messaging)
+
