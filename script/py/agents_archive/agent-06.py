@@ -22,7 +22,7 @@ from langchain.agents import create_agent  # The v1.x standard
 from langchain_core.tools import tool
 from langchain_ollama import ChatOllama
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "py-libraries"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "libs" / "py"))
 from utilities import safe_calculate
 
 # Top-level model name used by this script

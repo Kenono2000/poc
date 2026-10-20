@@ -31,6 +31,8 @@ from pathlib import Path
 
 
 def run_agent_scripts():
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     current_dir = Path(__file__).parent.resolve()
     
     pattern = str(current_dir / "agent-*.py")

@@ -182,6 +182,8 @@ def run_tests(models, limit=TEST_LIMIT):
 
 
 if __name__ == "__main__":
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     if not OPENROUTER_API_KEY:
         print("[ERROR] OPENROUTER_API_KEY is missing.")
         sys.exit(1)

@@ -66,7 +66,9 @@ def truncate_and_normalize(
 
 def load_config(env_path: str | None = None) -> tuple[str, str]:
     if env_path is None:
-        env_path = str(Path(__file__).parent / ".env")
+        root_env = Path(__file__).resolve().parents[2] / ".env"
+        local_env = Path(__file__).resolve().parent / ".env"
+        env_path = str(root_env if root_env.exists() else local_env)
     load_dotenv(env_path)
     openai_api_key = os.getenv("OPENAI_API_KEY", "")
     database_url = os.getenv("DATABASE_URL", "")

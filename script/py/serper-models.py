@@ -79,7 +79,7 @@ def test_single_endpoint(search_type, retries=1):
                         "code": 200,
                         "output": f"Found {result_count} results"
                     }
-                except:
+                except (KeyError, TypeError, ValueError):
                     return {
                         "model": search_type,
                         "status": "RESPONDED",
@@ -92,7 +92,7 @@ def test_single_endpoint(search_type, retries=1):
                 try:
                     error_data = response.json()
                     error_msg = error_data.get("message", response.text)
-                except:
+                except ValueError:
                     error_msg = response.text
 
                 return {
@@ -174,6 +174,8 @@ def run_tests(engines):
 
 
 if __name__ == "__main__":
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     if not SERPER_API_KEY:
         print("[ERROR] SERPER_API_KEY is missing.")
         sys.exit(1)

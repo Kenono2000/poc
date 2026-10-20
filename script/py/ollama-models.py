@@ -37,7 +37,7 @@ from pathlib import Path
 
 import requests
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "py-libraries"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "libs" / "py"))
 from utilities import get_ollama_host, get_retry_attempts, get_timeout_seconds
 
 OLLAMA_HOST = get_ollama_host()
@@ -277,6 +277,8 @@ def run_tests(models: list[str]):
 
 # --- Entry point -------------------------------------------------------------
 if __name__ == "__main__":
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description="Check Ollama model responsiveness")
     parser.add_argument("--host", default=None, help="Ollama server URL (for example: https://your-cloud-host)")
     parser.add_argument("--source", default="server", choices=["server", "cloud-page"], help="Where to discover model names from")

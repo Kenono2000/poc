@@ -2,18 +2,32 @@
 
 ---
 
-Hi [], applied for [Staff AI Engineer] at [Podium]. 20+ yrs building high-throughput backends + sovereign GenAI platforms (pgvector HNSW/FastMCP): github.com/Kenono2000/enterprise-rag-pgvector-rbac. Would love to connect on your compute roadmap. Best, Ken
+("Distinguished" OR "Principal" OR "Staff" OR "Senior") AND ("Software Engineer" OR "Systems Architect" OR "Platform Engineer" OR "Platform Architect" OR "Backend Engineer" OR "Security Engineer" OR "AI Engineer") AND ("Agentic" OR "MCP" OR "AI Platform" OR "RAG" OR "Vector" OR "Distributed Systems" OR "Zero Trust" OR "IAM" OR "FastAPI") NOT ("Solutions Architect" OR "Sales" OR "Pre-Sales" OR "GTM" OR "Field" OR "Customer Success" OR "Manager" OR "Consultant" OR "Consulting" OR "Agency" OR "Staffing" OR "Recruiter" OR "Ladders" OR "Frontend" OR "Front-End" OR "Hardware" OR "Firmware" OR "Intern" OR "Junior" OR "Contract" OR "C2C" OR "W2")
+
+("Principal" OR "Staff" OR "Senior") AND ("Software Engineer" OR "Systems Architect" OR "Platform Engineer" OR "Platform Architect" OR "Backend Engineer" OR "AI Engineer") AND ("Agentic" OR "MCP" OR "RAG" OR "Vector" OR "Distributed Systems" OR "Zero Trust" OR "IAM" OR "FastAPI") NOT ("Solutions Architect" OR "Sales" OR "GTM" OR "Manager" OR "Consultant" OR "Consulting" OR "Agency" OR "Staffing" OR "Ladders" OR "Frontend" OR "Hardware" OR "Contract" OR "W2")
 
 ---
 
-I am interested in []. I'm open to exploring both direct FTE and contract engagements. Could you send over the full JD, the cloud stack, the rate/comp band, and the hybrid office location? Also, please clarify whether this is an internal platform seat or an external client delivery engagement.
+Initial Outreach After Applying — under 300 chars
 
-If everything aligns, I would be glad to set up a call.
-Best,Ken Wong
+Hi [Name] — I’ve applied for Staff SWE and would value your perspective. I build sovereign agent runtimes with 20+ yrs of backend scale: github.com/Kenono2000/enterprise-rag-pgvector-rbac (FastMCP + pgvector RLS). Open to a friendly 15-min conversation about your agent compute roadmap? - Ken Wong | kenono2000@gmail.com
+
+Follow-Up After Applying — under 300 chars
+
+Hi [Name] — a respectful follow-up on my Staff SWE application. My live FastMCP gateway now has sub-50ms HNSW benchmarks and token circuit breakers: enterprise-rag-mcp.fastmcp.app. Any update on engineering review timing? - Ken Wong | kenono2000@gmail.com
+
+Recruiter Inbound Screening & Qualifying — under 300 chars
+
+Hi [Name], thank you for reaching out—I appreciate it. To confirm fit respectfully: 1) Is this direct corporate FTE or client consulting? 2) Is it 100% US remote or Chicago-based? 3) What is the approved base salary range? If aligned, I’d be glad to find 15 min in the next 1–3 days. - Ken Wong | kenono2000@gmail.com
+
+Reconnect / Pipeline Outreach — under 300 chars
+
+Hi [Name] — quick update, with thanks. I build sovereign AI platforms: github.com/Kenono2000/enterprise-rag-pgvector-rbac (FastMCP + pgvector RLS). I’m currently considering Staff FTE and 6+ mo contracts. Open to a brief catch-up next week? - Ken Wong | kenono2000@gmail.com
+
+Hi [Name] — quick connecting, with thanks. I build sovereign AI platforms: github.com/Kenono2000/enterprise-rag-pgvector-rbac (FastMCP + pgvector RLS). I’m currently considering Staff FTE and 6+ mo contracts. Open to a brief catch-up next week? - Ken Wong | kenono2000@gmail.com
+
+Follow-Up After Initital Recruiter Contact  — under 300 chars
+
+Hi [Name] — following up on my note. Still interested and happy to answer any questions first. If aligned, I’m open to a brief 15-min call in the next 1–3 days. Thanks for your time. - Ken Wong | kenono2000@gmail.com
 
 ---
-
-DISCO (Principal SWE – Legal AI Cloud Platform)
-
-Braze (Staff SWE – Core Ingestion & Messaging)
-

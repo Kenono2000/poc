@@ -145,7 +145,7 @@ def test_single_model(model_name):
                     error_msg = error_data[0].get("message", str(error_data))
                 else:
                     error_msg = error_data.get("error", {}).get("message", response.text)
-            except:
+            except ValueError:
                 error_msg = response.text
 
             return {

@@ -26,7 +26,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import OllamaLLM
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "py-libraries"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "libs" / "py"))
 from utilities import safe_calculate as calculator
 
 # Top-level model name used by this script

@@ -1,12 +1,19 @@
 {
   "name": "js-scripts",
   "version": "1.0.0",
-  "description": "",
-  "main": "getUsersMissingInnoIdSorted.js",
+  "description": "Browser bookmark sorting and Node.js utility scripts",
+  "main": "sortChromeBookmarks.js",
   "scripts": {
+    "sort:chrome": "node sortChromeBookmarks.js",
+    "sort:edge": "node sortEdgeBookmarks.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": [
+    "bookmarks",
+    "chrome",
+    "edge",
+    "utilities"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",

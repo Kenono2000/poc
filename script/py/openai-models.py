@@ -124,7 +124,7 @@ def test_single_model(model_id, retries=1):
                 try:
                     error_data = response.json()
                     error_msg = error_data.get("error", {}).get("message", response.text)
-                except:
+                except ValueError:
                     error_msg = response.text
 
                 return {
@@ -212,6 +212,8 @@ def run_tests(models, limit=TEST_LIMIT):
 
 
 if __name__ == "__main__":
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     if not OPENAI_API_KEY:
         print("[ERROR] OPENAI_API_KEY is missing.")
         sys.exit(1)
