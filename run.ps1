@@ -10,18 +10,28 @@
       - Workspace Health & Port Monitor
       - Safe Multi-Project Clean & Environment Setup
 .EXAMPLE
+    .\poc\run.ps1                 # Interactive menu mode (enter option number)
     .\poc\run.ps1 status          # Overview of git, venv, docker, and active ports
     .\poc\run.ps1 api             # Run FastAPI backend (:8000)
     .\poc\run.ps1 ui              # Run Streamlit UI (:8501)
+    .\poc\run.ps1 mcp             # Run FastMCP Gateway
     .\poc\run.ps1 test            # Run offline pytest suite (120 tests)
+    .\poc\run.ps1 ingest          # Run document ingestion pipeline
     .\poc\run.ps1 docker-up       # Start Postgres 16 (pgvector) + Jaeger Badger
+    .\poc\run.ps1 docker-down     # Stop docker compose services
     .\poc\run.ps1 studio          # Launch Abyssium Studio Vite dev server (:5173)
+    .\poc\run.ps1 build           # Build Abyssium Studio production bundle
+    .\poc\run.ps1 lint            # Run Abyssium Studio ESLint validation
+    .\poc\run.ps1 ollama          # Run local Ollama AI session (deepseek-r1:8b)
+    .\poc\run.ps1 activate        # Show Python venv activation command
     .\poc\run.ps1 clean           # Safely prune node_modules and pycache (excludes .venv)
+    .\poc\run.ps1 setup           # Verify & install dependencies for Python and Node
+    .\poc\run.ps1 help            # Display reference guide and available commands
 #>
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
-    [string]$Action = "status",
+    [string]$Action = "",
 
     [Parameter(ValueFromRemainingArguments = $true)]
     [string[]]$ExtraArgs
@@ -46,6 +56,26 @@ $VenvPython = Join-Path $WorkspaceRoot ".venv\Scripts\python.exe"
 $VenvActivate = Join-Path $WorkspaceRoot ".venv\Scripts\Activate.ps1"
 $PythonCmd = if (Test-Path $VenvPython) { $VenvPython } else { "python" }
 
+# Menu definition mapping numbers to actions and descriptions
+$MenuItems = [ordered]@{
+    "1"  = @{ Action = "status";      Category = "Workspace Diagnostics"; Desc = "Workspace Status, Ports & Git Health" }
+    "2"  = @{ Action = "api";         Category = "Enterprise RAG Stack";   Desc = "Start FastAPI Backend (uvicorn on :8000)" }
+    "3"  = @{ Action = "ui";          Category = "Enterprise RAG Stack";   Desc = "Start Streamlit UI (streamlit on :8501)" }
+    "4"  = @{ Action = "mcp";         Category = "Enterprise RAG Stack";   Desc = "Start FastMCP Gateway (python -m app.mcp)" }
+    "5"  = @{ Action = "test";        Category = "Enterprise RAG Stack";   Desc = "Run Pytest Suite (120 offline tests)" }
+    "6"  = @{ Action = "ingest";      Category = "Enterprise RAG Stack";   Desc = "Run Document Ingestion Pipeline" }
+    "7"  = @{ Action = "docker-up";   Category = "Enterprise RAG Stack";   Desc = "Start Postgres 16 (pgvector) + Jaeger" }
+    "8"  = @{ Action = "docker-down"; Category = "Enterprise RAG Stack";   Desc = "Stop Docker Compose Services" }
+    "9"  = @{ Action = "studio";      Category = "Abyssium Studio";        Desc = "Start Vite Dev Server (:5173)" }
+    "10" = @{ Action = "build";       Category = "Abyssium Studio";        Desc = "Build Production Bundle (Vite)" }
+    "11" = @{ Action = "lint";        Category = "Abyssium Studio";        Desc = "Run ESLint Validation" }
+    "12" = @{ Action = "ollama";      Category = "Ollama Local AI";        Desc = "Run Local DeepSeek Model (deepseek-r1:8b)" }
+    "13" = @{ Action = "activate";    Category = "Workspace Maintenance";  Desc = "Show Python venv Activation Command" }
+    "14" = @{ Action = "clean";       Category = "Workspace Maintenance";  Desc = "Safely Prune node_modules & pycache" }
+    "15" = @{ Action = "setup";       Category = "Workspace Maintenance";  Desc = "Verify & Install Python/Node Dependencies" }
+    "16" = @{ Action = "help";        Category = "Workspace Maintenance";  Desc = "Display Reference Guide & Help" }
+}
+
 function Show-Header {
     param([string]$Title, [string]$Color = "Cyan")
     Write-Host ""
@@ -54,9 +84,31 @@ function Show-Header {
     Write-Host "============================================================" -ForegroundColor $Color
 }
 
+function Show-InteractiveMenu {
+    Show-Header "Workspace Orchestrator - Interactive Menu" "Cyan"
+    Write-Host "Select an option by entering its number, or type the command name directly.`n" -ForegroundColor DarkGray
+
+    $currentCategory = ""
+    foreach ($entry in $MenuItems.GetEnumerator()) {
+        $key = $entry.Key
+        $item = $entry.Value
+        if ($item.Category -ne $currentCategory) {
+            $currentCategory = $item.Category
+            Write-Host "[$currentCategory]" -ForegroundColor Yellow
+        }
+        $numStr = "[$($key.PadLeft(2))]".PadRight(6)
+        $actionStr = "$($item.Action)".PadRight(13)
+        Write-Host "  $numStr" -ForegroundColor Cyan -NoNewline
+        Write-Host " $actionStr" -ForegroundColor DarkCyan -NoNewline
+        Write-Host " : $($item.Desc)" -ForegroundColor White
+    }
+    Write-Host "`n  [ 0]   quit          : Exit menu`n" -ForegroundColor DarkGray
+}
+
 function Show-Help {
     Show-Header "Workspace Orchestrator - Available Commands" "Cyan"
-    Write-Host "Usage: .\poc\run.ps1 <command> [extra arguments]`n" -ForegroundColor Yellow
+    Write-Host "Usage: .\poc\run.ps1 [command] [extra arguments]" -ForegroundColor Yellow
+    Write-Host "       .\poc\run.ps1 (without arguments launches interactive numbered menu)`n" -ForegroundColor DarkGray
 
     Write-Host "Enterprise RAG Stack (enterprise-rag-pgvector-rbac):" -ForegroundColor Green
     Write-Host "  api, rag-api       Start FastAPI backend (uvicorn app.main:app on :8000)"
@@ -82,7 +134,66 @@ function Show-Help {
     Write-Host "  help, ?            Display this reference guide`n"
 }
 
-switch ($Action.ToLower()) {
+function Start-MenuLoop {
+    while ($true) {
+        Show-InteractiveMenu
+        try {
+            $selection = Read-Host "Enter option number [0-$($MenuItems.Count), or 'q' to quit]"
+        } catch {
+            break
+        }
+        if ($null -eq $selection) { break }
+        $selection = $selection.Trim()
+        if ([string]::IsNullOrWhiteSpace($selection)) { continue }
+
+        if ($selection -in "0", "q", "quit", "exit") {
+            Write-Host "`nExiting Workspace Orchestrator. Goodbye!" -ForegroundColor Cyan
+            break
+        }
+
+        $chosenAction = $null
+        if ($MenuItems.Contains($selection)) {
+            $chosenAction = $MenuItems[$selection].Action
+        } else {
+            # Check if user entered action name or alias directly
+            $chosenAction = $selection
+        }
+
+        Invoke-WorkspaceAction -TargetAction $chosenAction -Arguments @()
+
+        Write-Host ""
+        try {
+            $resume = Read-Host "Press [Enter] to return to menu (or 'q' to quit)"
+        } catch {
+            break
+        }
+        if ($resume -and ($resume.Trim().ToLower() -in "q", "quit", "exit")) {
+            Write-Host "`nExiting Workspace Orchestrator. Goodbye!" -ForegroundColor Cyan
+            break
+        }
+    }
+}
+
+function Invoke-WorkspaceAction {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$TargetAction,
+
+        [string[]]$Arguments = @()
+    )
+
+    if ($MenuItems.Contains($TargetAction)) {
+        $TargetAction = $MenuItems[$TargetAction].Action
+    }
+
+    if ($TargetAction -in "0", "q", "quit", "exit") {
+        Write-Host "Exiting Workspace Orchestrator." -ForegroundColor Cyan
+        return
+    }
+
+    $ExtraArgs = $Arguments
+
+    switch ($TargetAction.ToLower()) {
     # -------------------------------------------------------------
     # Workspace Status & Diagnostics
     # -------------------------------------------------------------
@@ -427,7 +538,17 @@ switch ($Action.ToLower()) {
     }
 
     Default {
-        Write-Host "Unknown action: '$Action'" -ForegroundColor Red
+        Write-Host "Unknown action: '$TargetAction'" -ForegroundColor Red
         Show-Help
     }
+}
+}
+
+# -----------------------------------------------------------------
+# Entrypoint Execution
+# -----------------------------------------------------------------
+if ([string]::IsNullOrWhiteSpace($Action) -or ($Action -in "menu", "interactive")) {
+    Start-MenuLoop
+} else {
+    Invoke-WorkspaceAction -TargetAction $Action -Arguments $ExtraArgs
 }
