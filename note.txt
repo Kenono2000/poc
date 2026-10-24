@@ -2,33 +2,70 @@
 
 ---
 
-("Distinguished" OR "Principal" OR "Staff" OR "Senior") AND ("Software Engineer" OR "Systems Architect" OR "Platform Engineer" OR "Platform Architect" OR "Backend Engineer" OR "Security Engineer" OR "AI Engineer") AND ("Agentic" OR "MCP" OR "AI Platform" OR "RAG" OR "Vector" OR "Distributed Systems" OR "Zero Trust" OR "IAM" OR "FastAPI") NOT ("Solutions Architect" OR "Sales" OR "Pre-Sales" OR "GTM" OR "Field" OR "Customer Success" OR "Manager" OR "Consultant" OR "Consulting" OR "Agency" OR "Staffing" OR "Recruiter" OR "Ladders" OR "Frontend" OR "Front-End" OR "Hardware" OR "Firmware" OR "Intern" OR "Junior" OR "Contract" OR "C2C" OR "W2")
+("Distinguished" OR "Principal" OR "Staff" OR "Senior") AND ("Software Engineer" OR "Systems Architect" OR "Platform Engineer" OR "Platform Architect" OR "Backend Engineer" OR "Security Engineer" OR "AI Engineer") AND ("Agentic" OR "MCP" OR "AI Platform" OR "RAG" OR "Vector" OR "Distributed Systems" OR "Zero Trust" OR IAM OR FastAPI) NOT ("Solutions Architect" OR Sales OR "Pre-Sales" OR GTM OR Field OR "Customer Success" OR Manager OR Consultant OR Consulting OR Agency OR Staffing OR Recruiter OR Ladders OR Frontend OR "Front-End" OR Hardware OR Firmware OR Intern OR Junior OR Contract OR C2C OR W2)
 
-("Principal" OR "Staff" OR "Senior") AND ("Software Engineer" OR "Systems Architect" OR "Platform Engineer" OR "Platform Architect" OR "Backend Engineer" OR "AI Engineer") AND ("Agentic" OR "MCP" OR "RAG" OR "Vector" OR "Distributed Systems" OR "Zero Trust" OR "IAM" OR "FastAPI") NOT ("Solutions Architect" OR "Sales" OR "GTM" OR "Manager" OR "Consultant" OR "Consulting" OR "Agency" OR "Staffing" OR "Ladders" OR "Frontend" OR "Hardware" OR "Contract" OR "W2")
+("Distinguished" OR "Principal" OR "Staff" OR "Senior") AND TITLE:("Software Engineer" OR "Systems Architect" OR "Platform Engineer" OR "Platform Architect" OR "Backend Engineer" OR "Security Engineer" OR "AI Engineer") AND ("Agentic" OR "MCP" OR "AI Platform" OR RAG OR Vector OR "Distributed Systems" OR "Zero Trust" OR IAM OR FastAPI) NOT ("Solutions Architect" OR Sales OR "Pre-Sales" OR GTM OR Manager OR Consultant OR Agency OR Staffing OR Recruiter OR Frontend OR Hardware OR Contract OR W2)
 
----
-
-Initial Outreach After Applying — under 300 chars
-
-Hi [Name] — I’ve applied for Staff SWE and would value your perspective. I build sovereign agent runtimes with 20+ yrs of backend scale: github.com/Kenono2000/enterprise-rag-pgvector-rbac (FastMCP + pgvector RLS). Open to a friendly 15-min conversation about your agent compute roadmap? - Ken Wong | kenono2000@gmail.com
-
-Follow-Up After Applying — under 300 chars
-
-Hi [Name] — a respectful follow-up on my Staff SWE application. My live FastMCP gateway now has sub-50ms HNSW benchmarks and token circuit breakers: enterprise-rag-mcp.fastmcp.app. Any update on engineering review timing? - Ken Wong | kenono2000@gmail.com
-
-Recruiter Inbound Screening & Qualifying — under 300 chars
-
-Hi [Name], thank you for reaching out—I appreciate it. To confirm fit respectfully: 1) Is this direct corporate FTE or client consulting? 2) Is it 100% US remote or Chicago-based? 3) What is the approved base salary range? If aligned, I’d be glad to find 15 min in the next 1–3 days. - Ken Wong | kenono2000@gmail.com
-
-Reconnect / Pipeline Outreach — under 300 chars
-
-Hi [Name] — quick update, with thanks. I build sovereign AI platforms: github.com/Kenono2000/enterprise-rag-pgvector-rbac (FastMCP + pgvector RLS). I’m currently considering Staff FTE and 6+ mo contracts. Open to a brief catch-up next week? - Ken Wong | kenono2000@gmail.com
-
-Hi [Name] — quick connecting, with thanks. I build sovereign AI platforms: github.com/Kenono2000/enterprise-rag-pgvector-rbac (FastMCP + pgvector RLS). I’m currently considering Staff FTE and 6+ mo contracts. Open to a brief catch-up next week? - Ken Wong | kenono2000@gmail.com
-
-Follow-Up After Initital Recruiter Contact  — under 300 chars
-
-Hi [Name] — following up on my note. Still interested and happy to answer any questions first. If aligned, I’m open to a brief 15-min call in the next 1–3 days. Thanks for your time. - Ken Wong | kenono2000@gmail.com
+site:linkedin.com/jobs ("Distinguished" OR "Principal" OR "Staff" OR "Senior") ("Software Engineer" OR "Platform Engineer" OR "AI Engineer" OR "Security Engineer") (Agentic OR MCP OR RAG OR "Zero Trust" OR FastAPI) (Remote OR Chicago OR Chicagoland) -"Solutions Architect"
 
 ---
 
+1. Initial Outreach After Applying — <300 chars
+
+Hi [Name], I applied for the Staff/Principal AI Platform role. I build sovereign agent runtimes (FastMCP + pgvector RLS) with 20+ yrs backend scale: github.com/Kenono2000/enterprise-rag-pgvector-rbac. Please keep an eye out for my application. Thanks! - Ken Wong | kenono2000@gmail.com
+
+Hi [Name] — I’ve applied for Staff SWE and wanted to flag my application for your review. I build secure agent/RAG backends with FastMCP, pgvector RLS, and 20+ yrs backend scale: github.com/Kenono2000/enterprise-rag-pgvector-rbac. Thanks — Ken Wong | kenono2000@gmail.com
+
+Hi [Name] — I just applied for Staff SWE and wanted to put my application on your radar. I bring 20+ yrs of backend scale and built this FastMCP + pgvector RLS runtime: github.com/Kenono2000/enterprise-rag-pgvector-rbac. Hope you’ll keep an eye out for it! - Ken | kenono2000@gmail.com
+
+Hi [Name] — I recently applied for Staff SWE (20+ yrs backend scale). Sharing my production FastMCP + pgvector RLS repo alongside my resume: github.com/Kenono2000/enterprise-rag-pgvector-rbac. Would love to be considered! - Ken Wong | kenono2000@gmail.com
+
+Hi [Name], I’ve just applied for the Staff SWE role. With 20 + yrs scaling back‑ends and a sovereign‑agent runtime (github.com/Kenono2000/enterprise‑rag‑pgvector‑rbac), I’d love to share my ideas on agent compute when you have a moment. – Ken Wong | kenono2000@gmail.com
+
+---
+
+2. Follow-Up After Applying — <300 chars
+
+Hi — gentle nudge on my Staff SWE application for. Since applying I shipped token circuit breaker + sub-50ms HNSW on live gateway: enterprise-rag-mcp.fastmcp.app. No need to reply, just hoping it gets a look when you have a moment - Ken | kenono2000@gmail.com
+
+Hi [Name], following up on my Staff/Principal AI Platform application. My live FastMCP gateway features sub-50ms HNSW benchmarks and token circuit breakers: enterprise-rag-mcp.fastmcp.app. I’d be grateful if you could flag my profile for the hiring team. Thanks! - Ken Wong | kenono2000@gmail.com
+
+Hi [Name] — following up on my Staff SWE application so it’s on your radar. I built a live FastMCP gateway with sub-50ms HNSW and token circuit breakers: enterprise-rag-mcp.fastmcp.app. Thanks — Ken Wong | kenono2000@gmail.com
+
+Hi [Name] — quick follow-up on my Staff SWE application. I just added sub-50ms HNSW benchmarks and token circuit breakers to my live FastMCP gateway: enterprise-rag-mcp.fastmcp.app. Hope it’s helpful context when reviewing my resume! - Ken | kenono2000@gmail.com
+
+Hi [Name] — following up on my Staff SWE application. My live FastMCP gateway (sub-50ms pgvector HNSW + circuit breakers) is at enterprise-rag-mcp.fastmcp.app. Happy to send any extra details if my background looks like a fit! - Ken | kenono2000@gmail.com
+
+Hi [Name], following up on my Staff SWE application. My FastMCP gateway now hits sub‑50 ms HNSW benchmarks and token circuit‑breakers (enterprise‑rag‑mcp.fastmcp.app). Any update on the review timeline? – Ken Wong | kenono2000@gmail.com
+
+---
+
+3. Reconnect / Pipeline — <300 chars
+
+Hi — hope you're well! Still building prod RAG infra (FastMCP + pgvector RLS): github.com/Kenono2000/enterprise-rag-pgvector-rbac. Exploring Staff FTE + 6mo+ contract roles. Would love to stay on your radar for agent infra if timing fits - Ken | kenono2000@gmail.com
+
+Hi [Name], I build sovereign AI platforms (FastMCP + pgvector RLS): github.com/Kenono2000/enterprise-rag-pgvector-rbac. I’m actively exploring Staff/Principal AI Platform FTE or C2H roles. Please keep me in mind for any matching openings on your team. Thanks! - Ken Wong | kenono2000@gmail.com
+
+Hi [Name] — thanks for connecting. I wanted to flag that I’m open to Staff FTE and 6+ mo contracts. I build secure AI platforms with FastMCP + pgvector RLS: github.com/Kenono2000/enterprise-rag-pgvector-rbac. Thanks — Ken Wong | kenono2000@gmail.com
+
+Hi [Name] — hope you’re doing well! I’m currently open to Staff Backend/AI roles (FTE or 6+ mo contract). My latest build is a FastMCP + pgvector RLS platform: github.com/Kenono2000/enterprise-rag-pgvector-rbac. Please keep me in mind if a fit comes up! - Ken | kenono2000@gmail.com
+
+Hi [Name], quick thank‑you for your time. I build sovereign AI platforms (github.com/Kenono2000/enterprise‑rag‑pgvector‑rbac). I’m exploring Staff roles and 6‑mo contracts. Let me know if we can align next week. – Ken Wong | kenono2000@gmail.com
+
+---
+
+4. Follow-Up After Initial Recruiter Contact — <300 chars
+
+Hi — just circling back, still very interested in Staff SWE. Happy to share any details async if helpful. Thanks for keeping me in consideration - Ken | kenono2000@gmail.com
+
+Hi [Name], following up on our recent contact. I remain highly interested in the AI Platform role and am happy to provide any additional details on my FastMCP/Zero-Trust RAG background. Please let me know if you need anything else from my end. Thanks! - Ken Wong | kenono2000@gmail.com
+
+Hi [Name] — following up on my note. I’m still interested in the role and wanted to make sure my application is on your radar. Happy to answer any questions by email. Thanks — Ken Wong | kenono2000@gmail.com
+
+Hi [Name] — following up on my earlier note. Still very interested in the Staff SWE role and happy to answer any initial questions here or by email whenever you have a moment to review my application. Thanks! - Ken | kenono2000@gmail.com
+
+Hi [Name] — just following up on my note! Still very interested in the role and happy to share any additional details to help with your review. Appreciate your time! - Ken Wong | kenono2000@gmail.com
+
+Hi [Name], just circling back on my note. I remain very interested and ready to answer any questions. If there’s a good time, I’d appreciate any update on the next steps. Thanks! – Ken Wong | kenono2000@gmail.com
+
+---
