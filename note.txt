@@ -69,3 +69,11 @@ Hi [Name] — just following up on my note! Still very interested in the role an
 Hi [Name], just circling back on my note. I remain very interested and ready to answer any questions. If there’s a good time, I’d appreciate any update on the next steps. Thanks! – Ken Wong | kenono2000@gmail.com
 
 ---
+
+NAME                       ID              SIZE
+llama3.2:3b                a80c4f17acd5    2.0 GB
+phi4-mini:latest           78fad5d182a7    2.5 GB
+qwen3:4b                   359d7dd4bcda    2.5 GB
+gemma3:4b                  68ceab7e468a    3.4 GB
+
+---
