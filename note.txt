@@ -2,25 +2,20 @@
 
 ---
 
-("Distinguished" OR "Principal" OR "Staff" OR "Senior") AND ("Software Engineer" OR "Systems Architect" OR "Platform Engineer" OR "Platform Architect" OR "Backend Engineer" OR "Security Engineer" OR "AI Engineer") AND ("Agentic" OR "MCP" OR "AI Platform" OR "RAG" OR "Vector" OR "Distributed Systems" OR "Zero Trust" OR IAM OR FastAPI) NOT ("Solutions Architect" OR Sales OR "Pre-Sales" OR GTM OR Field OR "Customer Success" OR Manager OR Consultant OR Consulting OR Agency OR Staffing OR Recruiter OR Ladders OR Frontend OR "Front-End" OR Hardware OR Firmware OR Intern OR Junior OR Contract OR C2C OR W2)
+Principal AI Platform Architect | Staff Systems Engineer
+Enterprise Agentic Runtimes (Claude Agent SDK / MCP)  |  Polyglot Backends (Python, Node.js, .NET)  |  Multi-Model Data Planes
 
-("Distinguished" OR "Principal" OR "Staff" OR "Senior") AND TITLE:("Software Engineer" OR "Systems Architect" OR "Platform Engineer" OR "Platform Architect" OR "Backend Engineer" OR "Security Engineer" OR "AI Engineer") AND ("Agentic" OR "MCP" OR "AI Platform" OR RAG OR Vector OR "Distributed Systems" OR "Zero Trust" OR IAM OR FastAPI) NOT ("Solutions Architect" OR Sales OR "Pre-Sales" OR GTM OR Manager OR Consultant OR Agency OR Staffing OR Recruiter OR Frontend OR Hardware OR Contract OR W2)
+Hands-on Principal Systems & AI Platform Architect with 20+ years of experience developing and hosting production backends, Zero-Trust security perimeters, and enterprise agentic solutions. Proven expertise building deterministic agent runtimes using Model Context Protocol (MCP / FastMCP), Claude Agent SDK, and LangGraph, paired with deep production code mastery across Python, C# / .NET, and Node.js / TypeScript. Extensive track record architecting across relational, NoSQL, vector, document, and cloud object/blob data stores, while acting as a trusted bridge in the room with executive leadership, product owners, compliance officers, and non-engineering stakeholders to translate business strategy into durable software.
 
-site:linkedin.com/jobs ("Distinguished" OR "Principal" OR "Staff" OR "Senior") ("Software Engineer" OR "Platform Engineer" OR "AI Engineer" OR "Security Engineer") (Agentic OR MCP OR RAG OR "Zero Trust" OR FastAPI) (Remote OR Chicago OR Chicagoland) -"Solutions Architect"
+---
+
+TITLE:("Staff" OR "Principal" OR "Distinguished") AND TITLE:("Platform" OR "Software" OR "Backend" OR "Systems" OR "AI") AND ("Remote" OR "Chicago" OR "IL") AND ("Agentic" OR "MCP" OR "RAG" OR "FastAPI" OR "Distributed Systems" OR "Zero Trust" OR "IAM") NOT ("Staffing" OR "Recruiting" OR "Consulting" OR "Pre-Sales")
 
 ---
 
 1. Initial Outreach After Applying — <300 chars
 
-Hi [Name], I applied for the Staff/Principal AI Platform role. I build sovereign agent runtimes (FastMCP + pgvector RLS) with 20+ yrs backend scale: github.com/Kenono2000/enterprise-rag-pgvector-rbac. Please keep an eye out for my application. Thanks! - Ken Wong | kenono2000@gmail.com
-
-Hi [Name] — I’ve applied for Staff SWE and wanted to flag my application for your review. I build secure agent/RAG backends with FastMCP, pgvector RLS, and 20+ yrs backend scale: github.com/Kenono2000/enterprise-rag-pgvector-rbac. Thanks — Ken Wong | kenono2000@gmail.com
-
-Hi [Name] — I just applied for Staff SWE and wanted to put my application on your radar. I bring 20+ yrs of backend scale and built this FastMCP + pgvector RLS runtime: github.com/Kenono2000/enterprise-rag-pgvector-rbac. Hope you’ll keep an eye out for it! - Ken | kenono2000@gmail.com
-
-Hi [Name] — I recently applied for Staff SWE (20+ yrs backend scale). Sharing my production FastMCP + pgvector RLS repo alongside my resume: github.com/Kenono2000/enterprise-rag-pgvector-rbac. Would love to be considered! - Ken Wong | kenono2000@gmail.com
-
-Hi [Name], I’ve just applied for the Staff SWE role. With 20 + yrs scaling back‑ends and a sovereign‑agent runtime (github.com/Kenono2000/enterprise‑rag‑pgvector‑rbac), I’d love to share my ideas on agent compute when you have a moment. – Ken Wong | kenono2000@gmail.com
+Hi [Name] — I just applied for [], AI Platform & Agents and wanted to put my application on your radar. I bring 20+ yrs of backend scale and built this FastMCP + pgvector RLS runtime: github.com/Kenono2000/enterprise-rag-pgvector-rbac. Hope you’ll keep an eye out for it! - Ken | kenono2000@gmail.com
 
 ---
 
@@ -67,13 +62,5 @@ Hi [Name] — following up on my earlier note. Still very interested in the Staf
 Hi [Name] — just following up on my note! Still very interested in the role and happy to share any additional details to help with your review. Appreciate your time! - Ken Wong | kenono2000@gmail.com
 
 Hi [Name], just circling back on my note. I remain very interested and ready to answer any questions. If there’s a good time, I’d appreciate any update on the next steps. Thanks! – Ken Wong | kenono2000@gmail.com
-
----
-
-NAME                       ID              SIZE
-llama3.2:3b                a80c4f17acd5    2.0 GB
-phi4-mini:latest           78fad5d182a7    2.5 GB
-qwen3:4b                   359d7dd4bcda    2.5 GB
-gemma3:4b                  68ceab7e468a    3.4 GB
 
 ---
