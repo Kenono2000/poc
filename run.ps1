@@ -15,7 +15,9 @@
     .\poc\run.ps1 api             # Run FastAPI backend (:8000)
     .\poc\run.ps1 ui              # Run Streamlit UI (:8501)
     .\poc\run.ps1 mcp             # Run FastMCP Gateway
-    .\poc\run.ps1 test            # Run offline pytest suite (120 tests)
+    .\poc\run.ps1 mcp-ui          # Run FastMCP Inspector / Evaluate UI (Local Testing)
+    .\poc\run.ps1 mcp-eval-ui     # Run FastMCP Evaluate UI (interactive tool evaluation)
+    .\poc\run.ps1 test            # Run offline pytest suite (130 tests)
     .\poc\run.ps1 ingest          # Run document ingestion pipeline
     .\poc\run.ps1 docker-up       # Start Postgres 16 (pgvector) + Jaeger Badger
     .\poc\run.ps1 docker-down     # Stop docker compose services
@@ -53,6 +55,8 @@ if (-not (Test-Path (Join-Path $WorkspaceRoot "enterprise-rag-pgvector-rbac"))) 
 
 # Python venv detection
 $VenvPython = Join-Path $WorkspaceRoot ".venv\Scripts\python.exe"
+$VenvFastMcp = Join-Path $WorkspaceRoot ".venv\Scripts\fastmcp.exe"
+$VenvMcp = Join-Path $WorkspaceRoot ".venv\Scripts\mcp.exe"
 $VenvActivate = Join-Path $WorkspaceRoot ".venv\Scripts\Activate.ps1"
 $PythonCmd = if (Test-Path $VenvPython) { $VenvPython } else { "python" }
 
@@ -62,18 +66,19 @@ $MenuItems = [ordered]@{
     "2"  = @{ Action = "api";         Category = "Enterprise RAG Stack";   Desc = "Start FastAPI Backend (uvicorn on :8000)" }
     "3"  = @{ Action = "ui";          Category = "Enterprise RAG Stack";   Desc = "Start Streamlit UI (streamlit on :8501)" }
     "4"  = @{ Action = "mcp";         Category = "Enterprise RAG Stack";   Desc = "Start FastMCP Gateway (python -m app.mcp)" }
-    "5"  = @{ Action = "test";        Category = "Enterprise RAG Stack";   Desc = "Run Pytest Suite (120 offline tests)" }
-    "6"  = @{ Action = "ingest";      Category = "Enterprise RAG Stack";   Desc = "Run Document Ingestion Pipeline" }
-    "7"  = @{ Action = "docker-up";   Category = "Enterprise RAG Stack";   Desc = "Start Postgres 16 (pgvector) + Jaeger" }
-    "8"  = @{ Action = "docker-down"; Category = "Enterprise RAG Stack";   Desc = "Stop Docker Compose Services" }
-    "9"  = @{ Action = "studio";      Category = "Abyssium Studio";        Desc = "Start Vite Dev Server (:5173)" }
-    "10" = @{ Action = "build";       Category = "Abyssium Studio";        Desc = "Build Production Bundle (Vite)" }
-    "11" = @{ Action = "lint";        Category = "Abyssium Studio";        Desc = "Run ESLint Validation" }
-    "12" = @{ Action = "ollama";      Category = "Ollama Local AI";        Desc = "Run Local DeepSeek Model (deepseek-r1:8b)" }
-    "13" = @{ Action = "activate";    Category = "Workspace Maintenance";  Desc = "Show Python venv Activation Command" }
-    "14" = @{ Action = "clean";       Category = "Workspace Maintenance";  Desc = "Safely Prune node_modules & pycache" }
-    "15" = @{ Action = "setup";       Category = "Workspace Maintenance";  Desc = "Verify & Install Python/Node Dependencies" }
-    "16" = @{ Action = "help";        Category = "Workspace Maintenance";  Desc = "Display Reference Guide & Help" }
+    "5"  = @{ Action = "mcp-ui";      Category = "Enterprise RAG Stack";   Desc = "Start FastMCP Inspector / Evaluate UI (Local Testing)" }
+    "6"  = @{ Action = "test";        Category = "Enterprise RAG Stack";   Desc = "Run Pytest Suite (130 offline tests)" }
+    "7"  = @{ Action = "ingest";      Category = "Enterprise RAG Stack";   Desc = "Run Document Ingestion Pipeline" }
+    "8"  = @{ Action = "docker-up";   Category = "Enterprise RAG Stack";   Desc = "Start Postgres 16 (pgvector) + Jaeger" }
+    "9"  = @{ Action = "docker-down"; Category = "Enterprise RAG Stack";   Desc = "Stop Docker Compose Services" }
+    "10" = @{ Action = "studio";      Category = "Abyssium Studio";        Desc = "Start Vite Dev Server (:5173)" }
+    "11" = @{ Action = "build";       Category = "Abyssium Studio";        Desc = "Build Production Bundle (Vite)" }
+    "12" = @{ Action = "lint";        Category = "Abyssium Studio";        Desc = "Run ESLint Validation" }
+    "13" = @{ Action = "ollama";      Category = "Ollama Local AI";        Desc = "Run Local DeepSeek Model (deepseek-r1:8b)" }
+    "14" = @{ Action = "activate";    Category = "Workspace Maintenance";  Desc = "Show Python venv Activation Command" }
+    "15" = @{ Action = "clean";       Category = "Workspace Maintenance";  Desc = "Safely Prune node_modules & pycache" }
+    "16" = @{ Action = "setup";       Category = "Workspace Maintenance";  Desc = "Verify & Install Python/Node Dependencies" }
+    "17" = @{ Action = "help";        Category = "Workspace Maintenance";  Desc = "Display Reference Guide & Help" }
 }
 
 function Show-Header {
@@ -114,6 +119,8 @@ function Show-Help {
     Write-Host "  api, rag-api       Start FastAPI backend (uvicorn app.main:app on :8000)"
     Write-Host "  ui, streamlit      Start Streamlit UI (streamlit run streamlit_app.py on :8501)"
     Write-Host "  mcp, rag-mcp       Start FastMCP Gateway (python -m app.mcp)"
+    Write-Host "  mcp-ui, inspector  Start FastMCP Inspector / Evaluate UI (local web testing)"
+    Write-Host "  mcp-eval-ui        Start FastMCP Evaluate UI (alias for mcp-ui)"
     Write-Host "  test, rag-test     Run pytest test suite (accepts pytest args, e.g. -k rbac)"
     Write-Host "  ingest, rag-ingest Run data ingestion pipeline (python scripts/ingest.py)"
     Write-Host "  db, docker-up      Start PostgreSQL 16 (pgvector) + Jaeger (docker compose up -d)"
@@ -189,6 +196,15 @@ function Invoke-WorkspaceAction {
     if ($TargetAction -in "0", "q", "quit", "exit") {
         Write-Host "Exiting Workspace Orchestrator." -ForegroundColor Cyan
         return
+    }
+
+    # Normalize composite actions (e.g. 'mcp evaluate ui', 'mcp eval ui', 'mcp ui')
+    if ($TargetAction.ToLower() -in "mcp", "rag-mcp" -and $Arguments) {
+        $joined = ($Arguments -join " ").ToLower().Trim()
+        if ($joined -in "evaluate ui", "eval ui", "evaluate", "eval", "ui", "inspector") {
+            $TargetAction = "mcp-ui"
+            $Arguments = @()
+        }
     }
 
     $ExtraArgs = $Arguments
@@ -325,6 +341,24 @@ function Invoke-WorkspaceAction {
         }
     }
 
+    { $_ -in "rag-mcp-ui", "mcp-ui", "mcp-dev", "inspector", "mcp-inspector", "mcp-eval-ui", "mcp-evaluate-ui", "mcp-eval", "mcp-evaluate", "evaluate-ui", "eval-ui", "mcp evaluate ui", "mcp eval ui" } {
+        Show-Header "Starting FastMCP Inspector & Evaluate UI (Local Testing)" "Green"
+        Write-Host "Interactive UI for testing and evaluating FastMCP tools, schemas, and RBAC policies." -ForegroundColor Cyan
+        Write-Host "Server Target: SDLC-Harness-Gateway (app/mcp/gateway.py:mcp)`n" -ForegroundColor DarkGray
+        Push-Location "$WorkspaceRoot\enterprise-rag-pgvector-rbac"
+        try {
+            if (Test-Path $VenvFastMcp) {
+                & $VenvFastMcp dev inspector app/mcp/gateway.py:mcp @ExtraArgs
+            } elseif (Test-Path $VenvMcp) {
+                & $VenvMcp dev app/mcp/gateway.py:mcp @ExtraArgs
+            } else {
+                npx -y @modelcontextprotocol/inspector $PythonCmd -m app.mcp @ExtraArgs
+            }
+        } finally {
+            Pop-Location
+        }
+    }
+
     { $_ -in "rag-test", "test" } {
         Show-Header "Running Pytest Test Suite" "Green"
         Push-Location "$WorkspaceRoot\enterprise-rag-pgvector-rbac"
@@ -343,6 +377,25 @@ function Invoke-WorkspaceAction {
         Show-Header "Executing Document Ingestion Pipeline" "Green"
         Push-Location "$WorkspaceRoot\enterprise-rag-pgvector-rbac"
         try {
+            # ingest.py requires at least one path; prompt when none were supplied
+            if (-not $ExtraArgs -or $ExtraArgs.Count -eq 0) {
+                $defaultPath = if (Test-Path "docs") { "docs" } else { "" }
+                $promptText = "Enter file/directory path(s) to ingest (space-separated)"
+                if ($defaultPath) { $promptText += " [default: $defaultPath]" }
+                $pathInput = Read-Host $promptText
+                if ([string]::IsNullOrWhiteSpace($pathInput)) { $pathInput = $defaultPath }
+                if ([string]::IsNullOrWhiteSpace($pathInput)) {
+                    Write-Host "No path provided. Usage: .\poc\run.ps1 ingest <paths...> [--force] [--roles r1 r2] [--batch-size N]" -ForegroundColor Red
+                    return
+                }
+                $ExtraArgs = @($pathInput.Trim() -split '\s+')
+                $roleInput = Read-Host "Allowed roles (space-separated) [default: engineer]"
+                if (-not [string]::IsNullOrWhiteSpace($roleInput)) {
+                    $ExtraArgs += @("--roles") + @($roleInput.Trim() -split '\s+')
+                }
+                $forceInput = Read-Host "Force re-ingestion? [y/N]"
+                if ($forceInput -match '^(y|yes)$') { $ExtraArgs += "--force" }
+            }
             & $PythonCmd scripts/ingest.py @ExtraArgs
         } finally {
             Pop-Location
