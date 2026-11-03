@@ -1,221 +1,215 @@
-# Requires PowerShell 5+ / PowerShell Core
+<#
+.SYNOPSIS
+    Renames every file sharing an extension into a zero-padded sequential series.
 
-# The folder(s) containing files to be renamed/converted.
-# Update this path for the directory/directories you want to process.
-$SourceDirs = @( 
-    'D:\projects\Reference'
-    #,'D:\projects\Eclipse Vein'
-    #,'D:\projects\SeaArt'
-    #,'C:\Users\Ken Wong\Downloads'
+.DESCRIPTION
+    Given a target directory, files are grouped by extension and renamed to
+    001.ext, 002.ext, 003.ext, ... (width grows automatically for 1000+ files).
+    Each extension group is numbered independently, so a folder containing
+    25 JPGs and 3 PDFs becomes 001.jpg..025.jpg and 001.pdf..003.pdf.
+
+    The rename is performed in two passes through unique temporary names
+    ("__tmp_<guid>_<n>.ext"), which makes the operation safe even when the
+    destination numbers already exist or when source and destination overlap.
+    The script supports -WhatIf / -Confirm because it renames files in place.
+
+.PARAMETER Path
+    Directory containing the files to rename. Mandatory.
+
+.PARAMETER Recurse
+    Process subdirectories as well. Each directory is numbered independently.
+
+.PARAMETER Extension
+    Optional extension filter(s), with or without the leading dot (e.g. jpg, .pdf).
+    When omitted, every file in the directory is processed.
+
+.PARAMETER DigitWidth
+    Minimum number of digits in the sequence number. Defaults to 3 (001).
+
+.EXAMPLE
+    PS> .\_rename_by_extension_sequential.ps1 -Path "C:\Photos"
+
+    Renames files in C:\Photos to 001.<ext>, 002.<ext>, ...
+
+.EXAMPLE
+    PS> .\_rename_by_extension_sequential.ps1 -Path "C:\Photos" -Extension jpg,png -WhatIf
+
+    Shows which files would be renamed, restricted to .jpg and .png.
+
+.EXAMPLE
+    PS> .\_rename_by_extension_sequential.ps1 -Path "C:\Photos" -Recurse -Confirm:$false
+
+    Renames files in C:\Photos and every subdirectory without prompting.
+
+.NOTES
+    - Hidden/system files are skipped.
+    - Files already matching the target pattern (e.g. 001.jpg) are renumbered too,
+      so the result is a clean, gap-free sequence.
+    - A preview of the temporary-name pass is written to the Verbose stream.
+#>
+[CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
+param(
+    [Parameter(Mandatory = $true, Position = 0)]
+    [ValidateNotNullOrEmpty()]
+    [string]$Path,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$Recurse,
+
+    [Parameter(Mandatory = $false)]
+    [string[]]$Extension,
+
+    [Parameter(Mandatory = $false)]
+    [ValidateRange(1, 10)]
+    [int]$DigitWidth = 3
 )
 
-# File type groups. Image files are converted to JPEG when needed.
-$imageExts = '.jpg','.jpeg','.png','.gif','.bmp','.tiff','.tif','.webp','.svg','.heic'
-$videoExts = '.mp4','.mov','.mkv','.avi','.wmv','.flv','.webm','.mpeg','.mpg'
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
 
-# Run-specific prefix to ensure temporary names never collide with existing files.
-$runId = [guid]::NewGuid().ToString('N')
-# Stores mapping from temporary file paths to their final names for the second pass.
-$tempMap = [System.Collections.Generic.List[PSObject]]::new()
-$tempCounter = 1
-$totalFilesProcessed = 0
-
-# Ensure System.Drawing is loaded only once.
-function Load-SystemDrawing {
-    if (-not ([AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GetName().Name -eq 'System.Drawing' })) {
-        Add-Type -AssemblyName System.Drawing | Out-Null
-    }
+# Normalise the requested extensions to lower-case ".ext" form.
+$ExtensionFilter = $null
+if ($Extension) {
+    $ExtensionFilter = @(
+        $Extension |
+            ForEach-Object { $_.Trim().ToLowerInvariant() } |
+            Where-Object { $_ -ne '' } |
+            ForEach-Object { if ($_.StartsWith('.')) { $_ } else { ".$_" } } |
+            Select-Object -Unique
+    )
 }
 
-# Convert an image file to JPEG, preserving dimensions and using a standard 24-bit pixel format.
-function Convert-ImageToJpeg {
+function Get-TargetFiles {
     param(
-        [Parameter(Mandatory = $true)] [string] $SourcePath,
-        [Parameter(Mandatory = $true)] [string] $DestPath
+        [Parameter(Mandatory = $true)][string]$Directory,
+        [Parameter(Mandatory = $false)][string[]]$Filter
     )
 
-    # Unsupported extensions that require an external tool like ImageMagick.
-    $unsupportedExts = '.webp', '.svg', '.heic'
-    $sourceExt = ([System.IO.Path]::GetExtension($SourcePath)).ToLowerInvariant()
+    $items = @(Get-ChildItem -LiteralPath $Directory -File -Force -ErrorAction Stop |
+        Where-Object { -not ($_.Attributes -band [System.IO.FileAttributes]::System) })
 
-    if ($unsupportedExts -contains $sourceExt) {
-        if (-not (Get-Command magick -ErrorAction SilentlyContinue)) {
-            throw "ImageMagick is required to convert '$SourcePath', but the 'magick' command was not found. Please install ImageMagick and ensure it is in your PATH."
-        }
-        try {
-            # Use ImageMagick for formats not supported by System.Drawing.
-            & magick "$SourcePath" -background white -flatten -quality 90 "$DestPath"
-        } catch {
-            throw "ImageMagick conversion for '$SourcePath' failed. Original error: $_"
-        }
-        return
+    if ($Filter) {
+        $items = @($items | Where-Object { $Filter -contains $_.Extension.ToLowerInvariant() })
     }
 
-    try {
-        Load-SystemDrawing
-        $img = [System.Drawing.Image]::FromFile($SourcePath)
-        try {
-            $pixelFormat = [System.Drawing.Imaging.PixelFormat]::Format24bppRgb
-            $bmp = New-Object System.Drawing.Bitmap -ArgumentList $img.Width, $img.Height, $pixelFormat
-            $graphics = [System.Drawing.Graphics]::FromImage($bmp)
-
-            # White background ensures transparent images are flattened cleanly.
-            $graphics.Clear([System.Drawing.Color]::White)
-            $graphics.DrawImage($img, 0, 0, $img.Width, $img.Height)
-            $graphics.Dispose()
-
-            # Configure JPEG encoder to save with 90% quality.
-            $encoder = [System.Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() | Where-Object { $_.MimeType -eq 'image/jpeg' }
-            $encParams = New-Object System.Drawing.Imaging.EncoderParameters(1)
-            $encParams.Param[0] = New-Object System.Drawing.Imaging.EncoderParameter([System.Drawing.Imaging.Encoder]::Quality, 90L)
-            $bmp.Save($DestPath, $encoder, $encParams)
-        } finally {
-            $img.Dispose()
-            if ($bmp) { $bmp.Dispose() }
-        }
-    } catch {
-        throw "Image conversion failed for '$SourcePath': $_"
-    }
+    return $items
 }
 
-# Create a temporary name and move or convert the file into that temporary location.
-function Add-TempRename($file, $finalName) {
-    $origExt = $file.Extension.ToLowerInvariant()
+function Rename-ExtensionGroup {
+    param(
+        [Parameter(Mandatory = $true)][System.IO.FileInfo[]]$Files,
+        [Parameter(Mandatory = $true)][string]$Directory
+    )
 
-    # Convert non-JPEG images to JPEG and use .jpeg for the temp file.
-    $isJpeg = $origExt -in ('.jpg', '.jpeg')
-    $tempExt = if ($imageExts -contains $origExt -and -not $isJpeg) { '.jpeg' } else { $origExt }
-    $tempName = "__tmp_${runId}_$tempCounter$tempExt"
-    $tempPath = Join-Path $file.DirectoryName $tempName
+    # Group by extension so numbering restarts at 001 for each type.
+    $groups = $Files | Group-Object -Property { $_.Extension.ToLowerInvariant() }
+    if (-not $groups) { return 0 }
 
-    if ($imageExts -contains $origExt -and -not $isJpeg) { # This is a conversion
-        try {
-            Convert-ImageToJpeg -SourcePath $file.FullName -DestPath $tempPath -ErrorAction Stop
-            # If conversion is successful, remove the original file.
-            Remove-Item -LiteralPath $file.FullName -Force -ErrorAction Stop
-        }
-        catch {
-            Write-Warning "Failed to convert and replace '$($file.FullName)'. It will be skipped. Reason: $($_.Exception.Message)"
-            # Clean up the partially created temp file if it exists to prevent further errors.
-            if (Test-Path -LiteralPath $tempPath) {
-                Remove-Item -LiteralPath $tempPath -Force -ErrorAction SilentlyContinue
+    $renamed = 0
+
+    foreach ($group in $groups) {
+        $files = @($group.Group | Sort-Object -Property Name)
+        $count = $files.Count
+        if ($count -eq 0) { continue }
+
+        # Grow the width for large folders so sorting stays correct (e.g. 0001).
+        $width = [Math]::Max($DigitWidth, ([string]$count).Length)
+        $runId = [guid]::NewGuid().ToString('N')
+
+        $tempMap = [System.Collections.Generic.List[object]]::new()
+        $index = 0
+
+        foreach ($file in $files) {
+            $index++
+            $finalName = $index.ToString(('D' + $width)) + $file.Extension.ToLowerInvariant()
+            $tempName = "__tmp_${runId}_$index$($file.Extension.ToLowerInvariant())"
+            $tempPath = Join-Path -Path $Directory -ChildPath $tempName
+
+            # Pass 1: move the original out of the way to a guaranteed-unique name.
+            if ($PSCmdlet.ShouldProcess($file.FullName, "Rename to temporary name '$tempName'")) {
+                try {
+                    Rename-Item -LiteralPath $file.FullName -NewName $tempName -ErrorAction Stop
+                    $tempMap.Add([pscustomobject]@{
+                        TempPath  = $tempPath
+                        FinalName = $finalName
+                    })
+                }
+                catch {
+                    Write-Warning "Failed to stage '$($file.FullName)': $($_.Exception.Message)"
+                }
             }
-            return
         }
-    } else { # This is a simple rename
-        try {
-            Rename-Item -LiteralPath $file.FullName -NewName $tempName -ErrorAction Stop
-        }
-        catch {
-            Write-Warning "Failed to rename '$($file.FullName)'. It will be skipped. Reason: $($_.Exception.Message)"
-            return
-        }
-    }
 
-    # Record the temporary path and final desired name for the second pass.
-    $tempMap.Add([PSCustomObject]@{
-        TempFullPath = $tempPath
-        FinalName    = $finalName
-        Directory    = $file.DirectoryName
-    }) | Out-Null
-
-    $script:tempCounter++
-}
-
-# Generic group processor. It sorts files by creation time and builds final names using a callback.
-function Process-Group($filesToProcess, [ScriptBlock]$nameBuilder) {
-    $index = 1
-    foreach ($file in ($filesToProcess | Sort-Object CreationTime)) {
-        # Format sequence number with leading zeros (e.g., 001, 002).
-        $seq = "{0:D3}" -f $index
-        $finalName = $nameBuilder.Invoke($file, $seq)
-        Add-TempRename -file $file -finalName $finalName
-        $index++
-    }
-}
-
-# Build standard names for each category.
-function New-ImageName($file, $seq) { "ref-image-$seq.jpeg" }
-function New-VideoName($file, $seq) { "ref-video-$seq$($file.Extension.ToLowerInvariant())" }
-function New-OtherName($file, $seq) {
-    $baseName = [IO.Path]::GetFileNameWithoutExtension($file.Name)
-    $ext = $file.Extension.ToLowerInvariant()
-    "${baseName}_$seq$ext"
-}
-
-# Get all directories to process, including subdirectories.
-$dirsToProcess = foreach ($dir in $SourceDirs) {
-    if (Test-Path -LiteralPath $dir -PathType Container) {
-        # Output the directory itself
-        $dir
-        # And its subdirectories
-        Get-ChildItem -Path $dir -Recurse -Directory | Select-Object -ExpandProperty FullName
-    } else {
-        Write-Warning "Source directory not found or is not a directory: $dir. Skipping."
-    }
-}
-
-foreach ($SourceDir in $dirsToProcess) {
-    # Gather candidate files from the source directory (non-recursive).
-    $files = Get-ChildItem -LiteralPath $SourceDir -File
-    if (-not $files) {
-        Write-Host "No files found in $SourceDir"
-        continue
-    }
-
-    $script:totalFilesProcessed += $files.Count
-
-    # Process image, video, and other file groups for the current directory.
-    Process-Group ($files | Where-Object { $imageExts -contains $_.Extension.ToLowerInvariant() }) ${function:New-ImageName}
-    Process-Group ($files | Where-Object { $videoExts -contains $_.Extension.ToLowerInvariant() }) ${function:New-VideoName}
-    # Group remaining files by extension and process each group separately.
-    foreach ($group in ($files | Where-Object { -not ($imageExts + $videoExts) -contains $_.Extension.ToLowerInvariant() } | Group-Object { $_.Extension.ToLowerInvariant() })) {
-        Process-Group $group.Group ${function:New-OtherName}
-    }
-}
-
-# Final pass: rename temporary files to their intended final names.
-foreach ($entry in $tempMap) {
-    $tempPath = $entry.TempFullPath
-    $finalName = $entry.FinalName
-    $dir = $entry.Directory
-
-    if (-not (Test-Path -LiteralPath $tempPath)) {
-        Write-Error "Temporary file missing: $tempPath"
-        exit 1
-    }
-
-    $destPath = Join-Path $dir $finalName
-
-    # If temp and dest point to the same path, skip to avoid replacing file with itself.
-    if ($tempPath -ieq $destPath) {
-        Write-Host "Skipping rename; temporary file equals destination: $destPath"
-        continue
-    }
-
-    # If a target file already exists, remove it first to avoid rename collisions.
-    if (Test-Path -LiteralPath $destPath) {
-        try {
-            # If the destination file already exists, check if it's the same file as our
-            # temporary file. This can happen if the script is re-run on an already
-            # processed directory where the final name matches a temporary name pattern.
-            if ((Get-Item -LiteralPath $destPath).FullName -ieq (Get-Item -LiteralPath $tempPath).FullName) {
-                Write-Host "Destination already matches temporary file; skipping: $destPath"
+        # Pass 2: promote temporary names to the final sequential names.
+        foreach ($entry in $tempMap) {
+            if (-not (Test-Path -LiteralPath $entry.TempPath)) {
+                Write-Warning "Temporary file disappeared before final rename: $($entry.TempPath)"
                 continue
             }
-            Remove-Item -LiteralPath $destPath -Force -ErrorAction Stop
-        } catch {
-            Write-Error "Failed to remove existing destination '$destPath' before renaming '$tempPath': $_"
-            exit 1
+
+            $destination = Join-Path -Path $Directory -ChildPath $entry.FinalName
+            if ($PSCmdlet.ShouldProcess($entry.TempPath, "Rename to final name '$($entry.FinalName)'")) {
+                try {
+                    if (Test-Path -LiteralPath $destination) {
+                        # Only reachable if an unexpected collision slipped through.
+                        Remove-Item -LiteralPath $destination -Force -ErrorAction Stop
+                    }
+                    Rename-Item -LiteralPath $entry.TempPath -NewName $entry.FinalName -ErrorAction Stop
+                    $renamed++
+                }
+                catch {
+                    Write-Warning "Failed to rename '$($entry.TempPath)' to '$($entry.FinalName)': $($_.Exception.Message)"
+                }
+            }
         }
     }
 
-    try {
-        Move-Item -LiteralPath $tempPath -Destination $destPath -Force -ErrorAction Stop
-    } catch {
-        Write-Error "Failed to rename temporary '$tempPath' to final name '$finalName': $_"
-        exit 1
-    }
+    return $renamed
 }
 
-Write-Host "Renaming complete. Processed $totalFilesProcessed files in $($SourceDirs.Count) folder(s)."
+# --- Validate the target path -------------------------------------------------
+$resolved = Resolve-Path -LiteralPath $Path -ErrorAction SilentlyContinue
+if (-not $resolved) {
+    Write-Error "The specified path does not exist: $Path"
+    exit 1
+}
+$root = $resolved.ProviderPath
+if (-not (Test-Path -LiteralPath $root -PathType Container)) {
+    Write-Error "The specified path is not a directory: $root"
+    exit 1
+}
+
+# --- Collect the directories to process --------------------------------------
+$directories = [System.Collections.Generic.List[string]]::new()
+$directories.Add($root)
+
+if ($Recurse) {
+    Get-ChildItem -LiteralPath $root -Directory -Recurse -Force -ErrorAction SilentlyContinue |
+        ForEach-Object { $directories.Add($_.FullName) }
+}
+
+Write-Host "Processing $($directories.Count) director$(if ($directories.Count -eq 1) { 'y' } else { 'ies' }) under: $root" -ForegroundColor Cyan
+if ($ExtensionFilter) {
+    Write-Host "Extension filter: $($ExtensionFilter -join ', ')" -ForegroundColor DarkGray
+}
+
+$totalRenamed = 0
+foreach ($directory in $directories) {
+    try {
+        $files = @(Get-TargetFiles -Directory $directory -Filter $ExtensionFilter)
+    }
+    catch {
+        Write-Warning "Cannot enumerate '$directory': $($_.Exception.Message)"
+        continue
+    }
+
+    if (-not $files -or $files.Count -eq 0) {
+        Write-Verbose "No matching files in $directory"
+        continue
+    }
+
+    Write-Verbose "Processing $($files.Count) file(s) in $directory"
+    $totalRenamed += Rename-ExtensionGroup -Files $files -Directory $directory
+}
+
+Write-Host "`nSequential rename complete. Files renamed: $totalRenamed" -ForegroundColor Green

@@ -1,80 +1,205 @@
+#!/usr/bin/env node
+/**
+ * sortEdgeBookmarks.js
+ *
+ * Alphabetically sorts Microsoft Edge bookmarks in place:
+ *   - folders first (case-insensitive by name), then URLs, then protected folders
+ *   - recurses through bookmark_bar, other and synced roots
+ *   - protected folders (e.g. Chrome, MTC, ACER) keep their position at the end
+ *
+ * Safety:
+ *   - aborts if the Bookmarks file is missing or unreadable
+ *   - writes a timestamped `.backup` copy before touching the original
+ *   - creates the canonical `Bookmarks.backup` once (first pristine snapshot)
+ *   - rewrites the file with Edge's 3-space indentation
+ *
+ * Usage:
+ *   node sortEdgeBookmarks.js            # sort the Default profile
+ *   node sortEdgeBookmarks.js --dry-run  # show what would change
+ *   EDGE_PROFILE="Profile 1" node sortEdgeBookmarks.js
+ *   BOOKMARKS_PATH="C:\\path\\Bookmarks" node sortEdgeBookmarks.js
+ */
+
+'use strict';
+
 const fs = require('fs');
 const path = require('path');
 
-// ---------------------------------------------------------
-// 1. SET YOUR BOOKMARKS PATH
-// Uncomment the path for your specific Operating System:
-// ---------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Configuration
+// ---------------------------------------------------------------------------
 
-// WINDOWS (Default Profile):
-const bookmarksPath = path.join(process.env.LOCALAPPDATA, 'Microsoft', 'Edge', 'User Data', 'Default', 'Bookmarks');
+/** Folders whose contents are intentionally left unsorted (and pushed last). */
+const PROTECTED_FOLDERS = ['Chrome', 'MTC', 'ACER'];
 
-// MACOS (Default Profile):
-// const bookmarksPath = path.join(process.env.HOME, 'Library', 'Application Support', 'Microsoft Edge', 'Default', 'Bookmarks');
+/** Edge writes its Bookmarks file with 3-space indentation. */
+const INDENT = 3;
 
-// LINUX (Default Profile):
-// const bookmarksPath = path.join(process.env.HOME, '.config', 'microsoft-edge', 'Default', 'Bookmarks');
+const dryRun = process.argv.includes('--dry-run');
 
-// ---------------------------------------------------------
-
-try {
- // 2. Create a backup before making any destructive changes
- fs.copyFileSync(bookmarksPath, `${bookmarksPath}.backup`);
- console.log('✅ Backup created successfully at:', `${bookmarksPath}.backup`);
-
- // 3. Read and parse the Bookmarks JSON
- const rawData = fs.readFileSync(bookmarksPath, 'utf8');
- const bookmarks = JSON.parse(rawData);
-
- // 4. The Recursive Sorting Function
- // List of folders to skip
- const foldersToSkip = ['Chrome', 'MTC', 'ACER'];
-
- function sortChildren(node) {
-  // Base case: If there are no children, stop recursing
-  if (!node.children || !Array.isArray(node.children)) {
-   return;
+/**
+ * Resolve the Microsoft Edge bookmarks file for the current OS / profile.
+ * @returns {string} absolute path to the Bookmarks JSON file
+ */
+function resolveBookmarksPath() {
+  if (process.env.BOOKMARKS_PATH) {
+    return path.resolve(process.env.BOOKMARKS_PATH);
   }
 
-  // Recurse first: go all the way down to the deepest folders
-  node.children.forEach((child) => {
-   if (child.type === 'folder' && !foldersToSkip.includes(child.name)) {
-    sortChildren(child);
-   }
-  });
+  const profile = process.env.EDGE_PROFILE || 'Default';
 
-  // Separate the children into Folders (sortable and non-sortable) and URLs
-  const sortableFolders = node.children.filter((child) => child.type === 'folder' && !foldersToSkip.includes(child.name));
-  const skippedFolders = node.children.filter((child) => child.type === 'folder' && foldersToSkip.includes(child.name));
+  if (process.platform === 'win32') {
+    const localAppData = process.env.LOCALAPPDATA;
+    if (!localAppData) {
+      throw new Error('LOCALAPPDATA is not defined; set BOOKMARKS_PATH explicitly.');
+    }
+    return path.join(localAppData, 'Microsoft', 'Edge', 'User Data', profile, 'Bookmarks');
+  }
+
+  if (process.platform === 'darwin') {
+    return path.join(
+      process.env.HOME || '',
+      'Library',
+      'Application Support',
+      'Microsoft Edge',
+      profile,
+      'Bookmarks'
+    );
+  }
+
+  // Linux / other POSIX
+  return path.join(process.env.HOME || '', '.config', 'microsoft-edge', profile, 'Bookmarks');
+}
+
+/** Case-insensitive alphabetical comparison that tolerates missing names. */
+function compareByName(a, b) {
+  const nameA = (a.name || '').toLowerCase();
+  const nameB = (b.name || '').toLowerCase();
+  return nameA.localeCompare(nameB);
+}
+
+/**
+ * Recursively sort a bookmark folder node.
+ * @param {object} node bookmark folder object (has `children`)
+ */
+function sortChildren(node) {
+  if (!node || !Array.isArray(node.children)) {
+    return;
+  }
+
+  // Depth-first: sort descendants first.
+  for (const child of node.children) {
+    if (child.type === 'folder' && !PROTECTED_FOLDERS.includes(child.name)) {
+      sortChildren(child);
+    }
+  }
+
+  const sortableFolders = node.children.filter(
+    (child) => child.type === 'folder' && !PROTECTED_FOLDERS.includes(child.name)
+  );
+  const skippedFolders = node.children.filter(
+    (child) => child.type === 'folder' && PROTECTED_FOLDERS.includes(child.name)
+  );
   const urls = node.children.filter((child) => child.type === 'url');
+  const others = node.children.filter(
+    (child) => child.type !== 'folder' && child.type !== 'url'
+  );
 
-  // Sorting helper: Case-insensitive alphabetical sort
-  const sortAlphabetically = (a, b) => {
-   const nameA = (a.name || '').toLowerCase();
-   const nameB = (b.name || '').toLowerCase();
-   return nameA.localeCompare(nameB);
-  };
+  sortableFolders.sort(compareByName);
+  urls.sort(compareByName);
 
-  // Sort only the sortable folders and URLs
-  sortableFolders.sort(sortAlphabetically);
-  urls.sort(sortAlphabetically);
+  // Folders first, then URLs, then unknown node types, then protected folders.
+  node.children = [...sortableFolders, ...urls, ...others, ...skippedFolders];
+}
 
-  // Reassign the sorted arrays back to the node (Sortable Folders listed first, then URLs, then Skipped Folders at the end)
-  node.children = [...sortableFolders, ...urls, ...skippedFolders];
- }
+/**
+ * Create safety copies of the Bookmarks file.
+ * @param {string} bookmarksPath
+ */
+function backupBookmarks(bookmarksPath) {
+  const stamp = new Date()
+    .toISOString()
+    .replace(/[-:T]/g, '')
+    .slice(0, 14);
+  const timestamped = `${bookmarksPath}.backup-${stamp}`;
+  fs.copyFileSync(bookmarksPath, timestamped);
+  console.log(`✅ Timestamped backup: ${timestamped}`);
 
- // 5. Apply sorting to Edge's primary root directories
- const roots = bookmarks.roots;
- if (roots) {
-  if (roots.bookmark_bar) sortChildren(roots.bookmark_bar); // The main bookmarks bar
-  if (roots.other) sortChildren(roots.other); // "Other Bookmarks" folder
-  if (roots.synced) sortChildren(roots.synced); // Mobile/Synced bookmarks
- }
+  const canonical = `${bookmarksPath}.backup`;
+  if (!fs.existsSync(canonical)) {
+    fs.copyFileSync(bookmarksPath, canonical);
+    console.log(`✅ Initial backup:     ${canonical}`);
+  } else {
+    console.log(`ℹ️  Existing backup kept: ${canonical}`);
+  }
+}
 
- // 6. Write the beautifully sorted JSON back to the file
- // Edge uses 3 spaces for indentation in this specific file
- fs.writeFileSync(bookmarksPath, JSON.stringify(bookmarks, null, 3), 'utf8');
- console.log('🚀 Bookmarks successfully sorted!');
+/** Entry point. */
+function main() {
+  const bookmarksPath = resolveBookmarksPath();
+
+  if (!fs.existsSync(bookmarksPath)) {
+    console.error(`❌ Bookmarks file not found: ${bookmarksPath}`);
+    console.error(
+      '   Close Edge, verify the profile name, or set BOOKMARKS_PATH to the real file.'
+    );
+    process.exitCode = 1;
+    return;
+  }
+
+  // Read + parse before writing anything.
+  let bookmarks;
+  try {
+    bookmarks = JSON.parse(fs.readFileSync(bookmarksPath, 'utf8'));
+  } catch (error) {
+    console.error(`❌ Unable to read/parse ${bookmarksPath}: ${error.message}`);
+    process.exitCode = 1;
+    return;
+  }
+
+  if (!bookmarks || typeof bookmarks !== 'object' || !bookmarks.roots) {
+    console.error('❌ Unexpected Bookmarks structure: missing "roots" object.');
+    process.exitCode = 1;
+    return;
+  }
+
+  if (!dryRun) {
+    try {
+      backupBookmarks(bookmarksPath);
+    } catch (error) {
+      console.error(`❌ Backup failed, aborting to avoid data loss: ${error.message}`);
+      process.exitCode = 1;
+      return;
+    }
+  }
+
+  const roots = bookmarks.roots;
+  if (roots.bookmark_bar) sortChildren(roots.bookmark_bar);
+  if (roots.other) sortChildren(roots.other);
+  if (roots.synced) sortChildren(roots.synced);
+
+  const output = JSON.stringify(bookmarks, null, INDENT);
+
+  if (dryRun) {
+    console.log(`🔎 Dry run: would rewrite ${bookmarksPath} (${output.length} bytes).`);
+    return;
+  }
+
+  try {
+    fs.writeFileSync(bookmarksPath, output, 'utf8');
+  } catch (error) {
+    console.error(`❌ Failed to write ${bookmarksPath}: ${error.message}`);
+    console.error('   Make sure Edge is closed and the file is not read-only.');
+    process.exitCode = 1;
+    return;
+  }
+
+  console.log(`🚀 Edge bookmarks sorted successfully: ${bookmarksPath}`);
+}
+
+try {
+  main();
 } catch (error) {
- console.error('❌ An error occurred:', error.message);
+  console.error(`❌ Fatal error: ${error.message}`);
+  process.exitCode = 1;
 }

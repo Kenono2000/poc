@@ -1,8 +1,21 @@
 {
+  "name": "firestore-export",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Export/import Firestore data and send notification documents from Node.js (ES modules).",
+  "type": "module",
+  "scripts": {
+    "export": "node exportFirestore.js",
+    "import": "node importFirestore.js",
+    "notify": "node createNotification.js",
+    "filter": "node filterRequestsByUserDocumentReference.js",
+    "emulators": "firebase emulators:start --import ./firestore-export --export-on-exit"
+  },
   "dependencies": {
     "dotenv": "^17.2.1",
     "firebase": "^11.0.1"
+  },
+  "engines": {
+    "node": ">=18"
   }
-  ,
-  "type": "module"
 }

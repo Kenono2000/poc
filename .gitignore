@@ -7,6 +7,8 @@ desktop.ini
 .env
 .env.local
 .envrc
+credentials.json
+token.json
 .venv/
 env/
 venv/

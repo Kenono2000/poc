@@ -29,6 +29,17 @@ function Add-ReportItem {
     )
     if ($VisitedFilePaths.Add($File.FullName)) {
         $DriveRoot = $File.FullName.Substring(0, 2).ToUpperInvariant()
+        $AgeDays = [int]($Now - $File.LastWriteTime).TotalDays
+
+        # Age flag used to highlight 60 and 90 day staleness thresholds in the CSV.
+        $AgeFlag = if ($AgeDays -ge 90) {
+            '>90 days'
+        } elseif ($AgeDays -ge 60) {
+            '60-90 days'
+        } else {
+            'recent'
+        }
+
         $Results.Add([PSCustomObject]@{
             Drive            = $DriveRoot
             Category         = $Category
@@ -39,7 +50,8 @@ function Add-ReportItem {
             SizeMB           = [math]::Round($File.Length / 1MB, 4)
             SizeGB           = [math]::Round($File.Length / 1GB, 6)
             LastWriteTime    = $File.LastWriteTime
-            AgeDays          = [int]($Now - $File.LastWriteTime).TotalDays
+            AgeDays          = $AgeDays
+            AgeFlag          = $AgeFlag
         })
     }
 }
@@ -215,6 +227,20 @@ if ($Results.Count -gt 0) {
     }
     Write-Host "=== Breakdown by Category ===" -ForegroundColor Cyan
     $CategorySummary | Format-Table -AutoSize
+
+    # Staleness breakdown: flags files older than 60 and 90 days.
+    $AgeSummary = $Results | Group-Object AgeFlag | Sort-Object Name | ForEach-Object {
+        $AgeBytes = ($_.Group | Measure-Object -Property SizeBytes -Sum).Sum
+        if ($null -eq $AgeBytes) { $AgeBytes = 0 }
+        [PSCustomObject]@{
+            AgeFlag       = $_.Name
+            FileCount     = $_.Count
+            ReclaimableMB = [math]::Round($AgeBytes / 1MB, 2)
+            ReclaimableGB = [math]::Round($AgeBytes / 1GB, 3)
+        }
+    }
+    Write-Host "=== Breakdown by Age Flag (>60 / >90 days) ===" -ForegroundColor Cyan
+    $AgeSummary | Format-Table -AutoSize
 
     if ($PSCmdlet.ShouldProcess($OutputCsvPath, "Export $($Results.Count) obsolete file records to CSV")) {
         $Results | Sort-Object -Property SizeBytes -Descending | Export-Csv -LiteralPath $OutputCsvPath -NoTypeInformation -Encoding UTF8
