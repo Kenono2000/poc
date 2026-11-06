@@ -29,6 +29,7 @@
     .\poc\run.ps1 clean           # Safely prune node_modules and pycache (excludes .venv)
     .\poc\run.ps1 setup           # Verify & install dependencies for Python and Node
     .\poc\run.ps1 help            # Display reference guide and available commands
+    .\poc\run.ps1 start-all       # Auto-start API, Web App, MCP UI & Abyssium Studio
 #>
 [CmdletBinding()]
 param(
@@ -62,23 +63,24 @@ $PythonCmd = if (Test-Path $VenvPython) { $VenvPython } else { "python" }
 
 # Menu definition mapping numbers to actions and descriptions
 $MenuItems = [ordered]@{
-    "1"  = @{ Action = "status";      Category = "Workspace Diagnostics"; Desc = "Workspace Status, Ports & Git Health" }
-    "2"  = @{ Action = "api";         Category = "Enterprise RAG Stack";   Desc = "Start FastAPI Backend (uvicorn on :8000)" }
-    "3"  = @{ Action = "ui";          Category = "Enterprise RAG Stack";   Desc = "Start Streamlit UI (streamlit on :8501)" }
-    "4"  = @{ Action = "mcp";         Category = "Enterprise RAG Stack";   Desc = "Start FastMCP Gateway (python -m app.mcp)" }
-    "5"  = @{ Action = "mcp-ui";      Category = "Enterprise RAG Stack";   Desc = "Start FastMCP Inspector / Evaluate UI (Local Testing)" }
-    "6"  = @{ Action = "test";        Category = "Enterprise RAG Stack";   Desc = "Run Pytest Suite (130 offline tests)" }
-    "7"  = @{ Action = "ingest";      Category = "Enterprise RAG Stack";   Desc = "Run Document Ingestion Pipeline" }
-    "8"  = @{ Action = "docker-up";   Category = "Enterprise RAG Stack";   Desc = "Start Postgres 16 (pgvector) + Jaeger" }
-    "9"  = @{ Action = "docker-down"; Category = "Enterprise RAG Stack";   Desc = "Stop Docker Compose Services" }
-    "10" = @{ Action = "studio";      Category = "Abyssium Studio";        Desc = "Start Vite Dev Server (:5173)" }
-    "11" = @{ Action = "build";       Category = "Abyssium Studio";        Desc = "Build Production Bundle (Vite)" }
-    "12" = @{ Action = "lint";        Category = "Abyssium Studio";        Desc = "Run ESLint Validation" }
-    "13" = @{ Action = "ollama";      Category = "Ollama Local AI";        Desc = "Run Local DeepSeek Model (deepseek-r1:8b)" }
-    "14" = @{ Action = "activate";    Category = "Workspace Maintenance";  Desc = "Show Python venv Activation Command" }
-    "15" = @{ Action = "clean";       Category = "Workspace Maintenance";  Desc = "Safely Prune node_modules & pycache" }
-    "16" = @{ Action = "setup";       Category = "Workspace Maintenance";  Desc = "Verify & Install Python/Node Dependencies" }
-    "17" = @{ Action = "help";        Category = "Workspace Maintenance";  Desc = "Display Reference Guide & Help" }
+    "1"  = @{ Action = "start-all";   Category = "Quick Start";            Desc = "Auto-start API, Web App, MCP UI & Abyssium Studio" }
+    "2"  = @{ Action = "status";      Category = "Workspace Diagnostics"; Desc = "Workspace Status, Ports & Git Health" }
+    "3"  = @{ Action = "api";         Category = "Enterprise RAG Stack";   Desc = "Start FastAPI Backend (uvicorn on :8000)" }
+    "4"  = @{ Action = "ui";          Category = "Enterprise RAG Stack";   Desc = "Start Streamlit UI (streamlit on :8501)" }
+    "5"  = @{ Action = "mcp";         Category = "Enterprise RAG Stack";   Desc = "Start FastMCP Gateway (python -m app.mcp)" }
+    "6"  = @{ Action = "mcp-ui";      Category = "Enterprise RAG Stack";   Desc = "Start FastMCP Inspector / Evaluate UI (Local Testing)" }
+    "7"  = @{ Action = "test";        Category = "Enterprise RAG Stack";   Desc = "Run Pytest Suite (130 offline tests)" }
+    "8"  = @{ Action = "ingest";      Category = "Enterprise RAG Stack";   Desc = "Run Document Ingestion Pipeline" }
+    "9"  = @{ Action = "docker-up";   Category = "Enterprise RAG Stack";   Desc = "Start Postgres 16 (pgvector) + Jaeger" }
+    "10" = @{ Action = "docker-down"; Category = "Enterprise RAG Stack";   Desc = "Stop Docker Compose Services" }
+    "11" = @{ Action = "studio";      Category = "Abyssium Studio";        Desc = "Start Vite Dev Server (:5173)" }
+    "12" = @{ Action = "build";       Category = "Abyssium Studio";        Desc = "Build Production Bundle (Vite)" }
+    "13" = @{ Action = "lint";        Category = "Abyssium Studio";        Desc = "Run ESLint Validation" }
+    "14" = @{ Action = "ollama";      Category = "Ollama Local AI";        Desc = "Run Local DeepSeek Model (deepseek-r1:8b)" }
+    "15" = @{ Action = "activate";    Category = "Workspace Maintenance";  Desc = "Show Python venv Activation Command" }
+    "16" = @{ Action = "clean";       Category = "Workspace Maintenance";  Desc = "Safely Prune node_modules & pycache" }
+    "17" = @{ Action = "setup";       Category = "Workspace Maintenance";  Desc = "Verify & Install Python/Node Dependencies" }
+    "18" = @{ Action = "help";        Category = "Workspace Maintenance";  Desc = "Display Reference Guide & Help" }
 }
 
 function Show-Header {
@@ -139,6 +141,9 @@ function Show-Help {
     Write-Host "  setup              Verify & install dependencies for Python and Node projects"
     Write-Host "  clean              Safely purge node_modules and pycache (excludes .venv)"
     Write-Host "  help, ?            Display this reference guide`n"
+
+    Write-Host "Quick Start:" -ForegroundColor Green
+    Write-Host "  start-all, all     Auto-start FastAPI API, Streamlit Web App, FastMCP Inspector UI & Abyssium Studio (background jobs)`n"
 }
 
 function Start-MenuLoop {
@@ -457,6 +462,28 @@ function Invoke-WorkspaceAction {
         } finally {
             Pop-Location
         }
+    }
+
+    # -------------------------------------------------------------
+    # Quick Start: Auto-Launch All Core Services
+    # -------------------------------------------------------------
+    { $_ -in "start-all", "all", "launch-all" } {
+        Show-Header "Auto-Launching Core Services" "Green"
+        Write-Host "Starting: FastAPI API, Streamlit Web App, FastMCP Inspector UI, Abyssium Studio`n" -ForegroundColor DarkGray
+
+        $scriptPath = Join-Path $ScriptDir "run.ps1"
+
+        Start-Job -Name "RAG-API"     -ScriptBlock { & "$using:scriptPath" api }     | Out-Null
+        Start-Job -Name "RAG-WebApp"  -ScriptBlock { & "$using:scriptPath" ui }       | Out-Null
+        Start-Job -Name "MCP-UI"      -ScriptBlock { & "$using:scriptPath" mcp-ui }   | Out-Null
+        Start-Job -Name "Abyssium"    -ScriptBlock { & "$using:scriptPath" studio }   | Out-Null
+
+        Write-Host "All four services launched in background PowerShell jobs." -ForegroundColor Green
+        Write-Host "  API:        http://localhost:8000" -ForegroundColor Cyan
+        Write-Host "  Web App:    http://localhost:8501" -ForegroundColor Cyan
+        Write-Host "  MCP UI:     FastMCP Inspector" -ForegroundColor Cyan
+        Write-Host "  Studio:     http://localhost:5173" -ForegroundColor Cyan
+        Write-Host "`nMonitor jobs: Get-Job  |  View output: Receive-Job -Name <jobName>  |  Stop jobs: Stop-Job -Name <jobName>" -ForegroundColor DarkGray
     }
 
     # -------------------------------------------------------------
