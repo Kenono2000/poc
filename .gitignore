@@ -108,3 +108,5 @@ job_search_results_*.md
 service_account.json
 practice/questions.txt
 practice/py/main.py
+practice/question.html
+practice/question.md
