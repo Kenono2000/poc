@@ -27,6 +27,7 @@
     .\poc\run.ps1 ollama          # Run local Ollama AI session (deepseek-r1:8b)
     .\poc\run.ps1 activate        # Show Python venv activation command
     .\poc\run.ps1 clean           # Safely prune node_modules and pycache (excludes .venv)
+    .\poc\run.ps1 stop-ports      # Shut down processes on ports 5173, 8501, 8000, 6274
     .\poc\run.ps1 setup           # Verify & install dependencies for Python and Node
     .\poc\run.ps1 help            # Display reference guide and available commands
     .\poc\run.ps1 start-all       # Auto-start API, Web App, MCP UI & Abyssium Studio
@@ -79,8 +80,9 @@ $MenuItems = [ordered]@{
     "14" = @{ Action = "ollama";      Category = "Ollama Local AI";        Desc = "Run Local DeepSeek Model (deepseek-r1:8b)" }
     "15" = @{ Action = "activate";    Category = "Workspace Maintenance";  Desc = "Show Python venv Activation Command" }
     "16" = @{ Action = "clean";       Category = "Workspace Maintenance";  Desc = "Safely Prune node_modules & pycache" }
-    "17" = @{ Action = "setup";       Category = "Workspace Maintenance";  Desc = "Verify & Install Python/Node Dependencies" }
-    "18" = @{ Action = "help";        Category = "Workspace Maintenance";  Desc = "Display Reference Guide & Help" }
+    "17" = @{ Action = "stop-ports";  Category = "Workspace Maintenance";  Desc = "Shut Down Processes on Ports (5173, 8501, 8000, 6274)" }
+    "18" = @{ Action = "setup";       Category = "Workspace Maintenance";  Desc = "Verify & Install Python/Node Dependencies" }
+    "19" = @{ Action = "help";        Category = "Workspace Maintenance";  Desc = "Display Reference Guide & Help" }
 }
 
 function Show-Header {
@@ -140,6 +142,7 @@ function Show-Help {
     Write-Host "  status, st         Show git status, active listening ports, venv, and containers"
     Write-Host "  setup              Verify & install dependencies for Python and Node projects"
     Write-Host "  clean              Safely purge node_modules and pycache (excludes .venv)"
+    Write-Host "  stop-ports, kill-ports Shut down processes on ports 5173, 8501, 8000, 6274"
     Write-Host "  help, ?            Display this reference guide`n"
 
     Write-Host "Quick Start:" -ForegroundColor Green
@@ -566,6 +569,90 @@ function Invoke-WorkspaceAction {
         }
 
         Write-Host "`nWorkspace cleanup complete!" -ForegroundColor Green
+    }
+
+    # -------------------------------------------------------------
+    # Shut Down Processes on Specified Ports
+    # -------------------------------------------------------------
+    { $_ -in "stop-ports", "kill-ports", "killports", "shutdown-ports" } {
+        Show-Header "Shutting Down Processes on Ports (5173, 8501, 8000, 6274)" "Yellow"
+
+        $targetPorts = @(5173, 8501, 8000, 6274)
+        $killedCount = 0
+
+        foreach ($port in $targetPorts) {
+            Write-Host "Checking port $port..." -ForegroundColor Cyan
+            $pidsToKill = [System.Collections.Generic.HashSet[int]]::new()
+
+            # Attempt 1: Get-NetTCPConnection (PowerShell native)
+            try {
+                $connections = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
+                if ($connections) {
+                    foreach ($conn in $connections) {
+                        if ($conn.OwningProcess -and $conn.OwningProcess -gt 0) {
+                            $null = $pidsToKill.Add($conn.OwningProcess)
+                        }
+                    }
+                }
+            } catch {
+                # Fallback handled below
+            }
+
+            # Attempt 2: netstat -ano fallback
+            try {
+                $netstatLines = netstat -ano 2>$null | Select-String -Pattern ":$port\s+"
+                foreach ($line in $netstatLines) {
+                    $str = $line.ToString().Trim()
+                    if ($str -match '^\s*TCP\s+\S+:(\d+)\s+\S+\s+LISTENING\s+(\d+)\s*$') {
+                        $matchedPort = [int]$matches[1]
+                        $matchedPid = [int]$matches[2]
+                        if ($matchedPort -eq $port -and $matchedPid -gt 0) {
+                            $null = $pidsToKill.Add($matchedPid)
+                        }
+                    }
+                }
+            } catch {
+                # Ignore netstat errors
+            }
+
+            if ($pidsToKill.Count -eq 0) {
+                Write-Host "  * Port $port : No active process found." -ForegroundColor DarkGray
+            } else {
+                foreach ($procId in $pidsToKill) {
+                    $procName = "PID $procId"
+                    try {
+                        $proc = Get-Process -Id $procId -ErrorAction SilentlyContinue
+                        if ($proc) { $procName = "$($proc.Name) (PID $procId)" }
+                    } catch {
+                        # Ignore
+                    }
+
+                    Write-Host "  * Terminating $procName on port $port..." -ForegroundColor Yellow
+                    try {
+                        Stop-Process -Id $procId -Force -ErrorAction Stop
+                        Write-Host "    [SUCCESS] Process $procId terminated." -ForegroundColor Green
+                        $killedCount++
+                    } catch {
+                        # Fallback to taskkill /F /PID
+                        cmd /c "taskkill /F /PID $procId" 2>$null | Out-Null
+                        $rem = Get-Process -Id $procId -ErrorAction SilentlyContinue
+                        if ($null -eq $rem) {
+                            Write-Host "    [SUCCESS] Process $procId terminated via taskkill." -ForegroundColor Green
+                            $killedCount++
+                        } else {
+                            Write-Host "    [WARNING] Failed to terminate PID $procId : $($_.Exception.Message)" -ForegroundColor Red
+                        }
+                    }
+                }
+            }
+        }
+
+        Write-Host ""
+        if ($killedCount -gt 0) {
+            Write-Host "Port shutdown complete: $killedCount process(es) terminated." -ForegroundColor Green
+        } else {
+            Write-Host "Port shutdown complete: All specified ports (5173, 8501, 8000, 6274) were already clear." -ForegroundColor Green
+        }
     }
 
     # -------------------------------------------------------------
