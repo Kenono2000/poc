@@ -818,13 +818,15 @@ function Invoke-WorkspaceAction {
                 }
                 if ($shouldSkip) { continue }
 
+                # Filter out ports without a recognized service text label
+                $serviceDesc = if ($KnownServices.ContainsKey($p)) { $KnownServices[$p] } else { "" }
+                if ([string]::IsNullOrWhiteSpace($serviceDesc)) { continue }
+
                 $procDisplay = if ($procNames.Count -gt 0) { $procNames -join ", " } else { "Unknown" }
 
                 $addrList = @($info.Addresses)
                 $addrStr = if ($addrList.Count -gt 0) { $addrList -join ", " } else { "*" }
-
-                $serviceDesc = if ($KnownServices.ContainsKey($p)) { $KnownServices[$p] } else { "" }
-                $detailStr = if ($serviceDesc) { "$serviceDesc ($addrStr)" } else { "($addrStr)" }
+                $detailStr = "$serviceDesc ($addrStr)"
 
                 $portColor = if ($p -in 8000, 8501, 5173, 5432, 6274, 11434) { "Green" } else { "White" }
 
@@ -835,7 +837,7 @@ function Invoke-WorkspaceAction {
                 $displayedCount++
             }
 
-            Write-Host "`nTotal active ports listed: $displayedCount (4-digit ports only; filtered out: 'system', 'onedrive', 'antigravity')" -ForegroundColor Green
+            Write-Host "`nTotal active ports listed: $displayedCount (labeled 4-digit ports only; filtered out: 'system', 'onedrive', 'antigravity')" -ForegroundColor Green
         }
         Write-Host ""
     }
