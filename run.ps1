@@ -779,9 +779,12 @@ function Invoke-WorkspaceAction {
         if ($sortedPorts.Count -eq 0) {
             Write-Host "`nNo active listening ports detected or insufficient permissions." -ForegroundColor Yellow
         } else {
+            $SkipProcesses = @("system", "onedrive", "antigravity")
+
             Write-Host ("`n{0,-7} {1,-18} {2,-24} {3}" -f "PORT", "PROCESS", "PID", "SERVICE / BOUND ADDRESS") -ForegroundColor DarkCyan
             Write-Host ("{0,-7} {1,-18} {2,-24} {3}" -f ("-" * 6), ("-" * 17), ("-" * 23), ("-" * 30)) -ForegroundColor DarkGray
 
+            $displayedCount = 0
             foreach ($p in $sortedPorts) {
                 $info = $PortMap[$p]
                 $pidList = @($info.PIDs)
@@ -798,6 +801,20 @@ function Invoke-WorkspaceAction {
                         # Ignore
                     }
                 }
+
+                # Filter out skipped processes ('system', 'onedrive', 'antigravity')
+                $shouldSkip = $false
+                if ($procNames.Count -gt 0) {
+                    $matchedSkips = @($procNames | Where-Object {
+                        $name = $_.ToLower()
+                        $SkipProcesses | Where-Object { $name -like "*$_*" }
+                    })
+                    if ($matchedSkips.Count -eq $procNames.Count) {
+                        $shouldSkip = $true
+                    }
+                }
+                if ($shouldSkip) { continue }
+
                 $procDisplay = if ($procNames.Count -gt 0) { $procNames -join ", " } else { "Unknown" }
 
                 $addrList = @($info.Addresses)
@@ -812,9 +829,10 @@ function Invoke-WorkspaceAction {
                 Write-Host (" {0,-17}" -f $procDisplay) -ForegroundColor Yellow -NoNewline
                 Write-Host (" {0,-23}" -f $pidStr) -ForegroundColor Cyan -NoNewline
                 Write-Host (" {0}" -f $detailStr) -ForegroundColor DarkGray
+                $displayedCount++
             }
 
-            Write-Host "`nTotal active ports found: $($sortedPorts.Count)" -ForegroundColor Green
+            Write-Host "`nTotal active ports listed: $displayedCount (filtered out: 'system', 'onedrive', 'antigravity')" -ForegroundColor Green
         }
         Write-Host ""
     }
