@@ -786,8 +786,8 @@ function Invoke-WorkspaceAction {
 
             $displayedCount = 0
             foreach ($p in $sortedPorts) {
-                # Skip 5-digit ephemeral / dynamic ports (>= 10000)
-                if ($p -ge 10000) { continue }
+                # Only show 4-digit ports (1000 - 9999)
+                if ($p -lt 1000 -or $p -gt 9999) { continue }
 
                 $info = $PortMap[$p]
                 $pidList = @($info.PIDs)
@@ -835,7 +835,7 @@ function Invoke-WorkspaceAction {
                 $displayedCount++
             }
 
-            Write-Host "`nTotal active ports listed: $displayedCount (filtered out: 'system', 'onedrive', 'antigravity', 5-digit ports)" -ForegroundColor Green
+            Write-Host "`nTotal active ports listed: $displayedCount (4-digit ports only; filtered out: 'system', 'onedrive', 'antigravity')" -ForegroundColor Green
         }
         Write-Host ""
     }
