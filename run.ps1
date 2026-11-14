@@ -28,6 +28,7 @@
     .\poc\run.ps1 activate        # Show Python venv activation command
     .\poc\run.ps1 clean           # Safely prune node_modules and pycache (excludes .venv)
     .\poc\run.ps1 stop-ports      # Shut down processes on ports 5173, 8501, 8000, 6274
+    .\poc\run.ps1 ports           # Find and list all active listening ports and processes
     .\poc\run.ps1 setup           # Verify & install dependencies for Python and Node
     .\poc\run.ps1 help            # Display reference guide and available commands
     .\poc\run.ps1 start-all       # Auto-start API, Web App, MCP UI & Abyssium Studio
@@ -81,8 +82,9 @@ $MenuItems = [ordered]@{
     "15" = @{ Action = "activate";    Category = "Workspace Maintenance";  Desc = "Show Python venv Activation Command" }
     "16" = @{ Action = "clean";       Category = "Workspace Maintenance";  Desc = "Safely Prune node_modules & pycache" }
     "17" = @{ Action = "stop-ports";  Category = "Workspace Maintenance";  Desc = "Shut Down Processes on Ports (5173, 8501, 8000, 6274)" }
-    "18" = @{ Action = "setup";       Category = "Workspace Maintenance";  Desc = "Verify & Install Python/Node Dependencies" }
-    "19" = @{ Action = "help";        Category = "Workspace Maintenance";  Desc = "Display Reference Guide & Help" }
+    "18" = @{ Action = "ports";       Category = "Workspace Maintenance";  Desc = "Find and Display All Active Listening Ports" }
+    "19" = @{ Action = "setup";       Category = "Workspace Maintenance";  Desc = "Verify & Install Python/Node Dependencies" }
+    "20" = @{ Action = "help";        Category = "Workspace Maintenance";  Desc = "Display Reference Guide & Help" }
 }
 
 function Show-Header {
@@ -140,6 +142,7 @@ function Show-Help {
 
     Write-Host "`nWorkspace Maintenance:" -ForegroundColor Green
     Write-Host "  status, st         Show git status, active listening ports, venv, and containers"
+    Write-Host "  ports, active-ports Find and list all active listening TCP ports with process details"
     Write-Host "  setup              Verify & install dependencies for Python and Node projects"
     Write-Host "  clean              Safely purge node_modules and pycache (excludes .venv)"
     Write-Host "  stop-ports, kill-ports Shut down processes on ports 5173, 8501, 8000, 6274"
@@ -653,6 +656,128 @@ function Invoke-WorkspaceAction {
         } else {
             Write-Host "Port shutdown complete: All specified ports (5173, 8501, 8000, 6274) were already clear." -ForegroundColor Green
         }
+    }
+
+    # -------------------------------------------------------------
+    # Find All Active Listening Ports
+    # -------------------------------------------------------------
+    { $_ -in "ports", "active-ports", "list-ports", "show-ports", "find-ports" } {
+        Show-Header "Active Listening Ports & Bound Processes" "Cyan"
+        Write-Host "Scanning active TCP listeners across system..." -ForegroundColor DarkGray
+
+        $KnownServices = @{
+            80    = "HTTP Web Server"
+            443   = "HTTPS Web Server"
+            3000  = "Dev Server / React / Next.js"
+            3210  = "LobeChat / AI Web UI"
+            4317  = "Jaeger OTLP gRPC"
+            4318  = "Jaeger OTLP HTTP"
+            5173  = "Abyssium Studio (Vite)"
+            5432  = "PostgreSQL (pgvector)"
+            6274  = "Dev Service"
+            6379  = "Redis Server"
+            8000  = "FastAPI Gateway (enterprise-rag)"
+            8080  = "HTTP Alternative / Proxy"
+            8501  = "Streamlit UI (enterprise-rag)"
+            9090  = "Prometheus Server"
+            11434 = "Ollama Local AI Server"
+            16686 = "Jaeger Tracing UI"
+        }
+
+        # Structure: hashtable keyed by [int]Port -> Custom Object @{ Port, IPList, PIDSet }
+        $PortMap = [ordered]@{}
+
+        # Strategy 1: PowerShell Get-NetTCPConnection
+        try {
+            $tcpConns = Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue
+            if ($tcpConns) {
+                foreach ($conn in $tcpConns) {
+                    $p = [int]$conn.LocalPort
+                    $ip = "$($conn.LocalAddress)".Trim()
+                    $procId = [int]$conn.OwningProcess
+
+                    if (-not $PortMap.Contains($p)) {
+                        $PortMap[$p] = [PSCustomObject]@{
+                            Port      = $p
+                            Addresses = [System.Collections.Generic.HashSet[string]]::new()
+                            PIDs      = [System.Collections.Generic.HashSet[int]]::new()
+                        }
+                    }
+                    if ($ip) { $null = $PortMap[$p].Addresses.Add($ip) }
+                    if ($procId -gt 0) { $null = $PortMap[$p].PIDs.Add($procId) }
+                }
+            }
+        } catch {
+            # Fallback handled below
+        }
+
+        # Strategy 2: netstat -ano fallback / supplement
+        try {
+            $netstatLines = netstat -ano 2>$null | Select-String -Pattern "LISTENING"
+            foreach ($line in $netstatLines) {
+                $str = $line.ToString().Trim()
+                if ($str -match '^\s*TCP\s+(\S+):(\d+)\s+\S+\s+LISTENING\s+(\d+)\s*$') {
+                    $ip = $matches[1]
+                    $p = [int]$matches[2]
+                    $procId = [int]$matches[3]
+
+                    if (-not $PortMap.Contains($p)) {
+                        $PortMap[$p] = [PSCustomObject]@{
+                            Port      = $p
+                            Addresses = [System.Collections.Generic.HashSet[string]]::new()
+                            PIDs      = [System.Collections.Generic.HashSet[int]]::new()
+                        }
+                    }
+                    if ($ip) { $null = $PortMap[$p].Addresses.Add($ip) }
+                    if ($procId -gt 0) { $null = $PortMap[$p].PIDs.Add($procId) }
+                }
+            }
+        } catch {
+            # Ignore netstat errors
+        }
+
+        $sortedPorts = @($PortMap.Keys | Sort-Object)
+        if ($sortedPorts.Count -eq 0) {
+            Write-Host "`nNo active listening ports detected or insufficient permissions." -ForegroundColor Yellow
+        } else {
+            Write-Host ("`n{0,-7} {1,-18} {2,-24} {3}" -f "PORT", "PROCESS", "PID", "SERVICE / BOUND ADDRESS") -ForegroundColor DarkCyan
+            Write-Host ("{0,-7} {1,-18} {2,-24} {3}" -f ("-" * 6), ("-" * 17), ("-" * 23), ("-" * 30)) -ForegroundColor DarkGray
+
+            foreach ($p in $sortedPorts) {
+                $info = $PortMap[$p]
+                $pidList = @($info.PIDs)
+                $pidStr = if ($pidList.Count -gt 0) { $pidList -join ", " } else { "-" }
+
+                $procNames = @()
+                foreach ($procId in $pidList) {
+                    try {
+                        $proc = Get-Process -Id $procId -ErrorAction SilentlyContinue
+                        if ($proc -and $proc.Name) {
+                            if ($procNames -notcontains $proc.Name) { $procNames += $proc.Name }
+                        }
+                    } catch {
+                        # Ignore
+                    }
+                }
+                $procDisplay = if ($procNames.Count -gt 0) { $procNames -join ", " } else { "Unknown" }
+
+                $addrList = @($info.Addresses)
+                $addrStr = if ($addrList.Count -gt 0) { $addrList -join ", " } else { "*" }
+
+                $serviceDesc = if ($KnownServices.ContainsKey($p)) { $KnownServices[$p] } else { "" }
+                $detailStr = if ($serviceDesc) { "$serviceDesc ($addrStr)" } else { "($addrStr)" }
+
+                $portColor = if ($p -in 8000, 8501, 5173, 5432, 6274, 11434) { "Green" } else { "White" }
+
+                Write-Host ("{0,-7}" -f $p) -ForegroundColor $portColor -NoNewline
+                Write-Host (" {0,-17}" -f $procDisplay) -ForegroundColor Yellow -NoNewline
+                Write-Host (" {0,-23}" -f $pidStr) -ForegroundColor Cyan -NoNewline
+                Write-Host (" {0}" -f $detailStr) -ForegroundColor DarkGray
+            }
+
+            Write-Host "`nTotal active ports found: $($sortedPorts.Count)" -ForegroundColor Green
+        }
+        Write-Host ""
     }
 
     # -------------------------------------------------------------
