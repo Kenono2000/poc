@@ -151,10 +151,27 @@ function Get-ActiveLabeled4DigitPorts {
     }
 
     # Filter out entries where all processes match skipped processes ('system', 'onedrive', 'antigravity')
+    # and filter out excluded bound addresses ('(127.0.0.1)', '(::, 0.0.0.0)', '(::1)')
     $filteredMap = @{}
     $sorted = @($portMap.Keys | Sort-Object)
     foreach ($p in $sorted) {
         $info = $portMap[$p]
+
+        # Address filtering
+        $addrList = @($info.Addresses)
+        $addrStr = if ($addrList.Count -gt 0) { $addrList -join ", " } else { "*" }
+        $addrBracket = "($addrStr)"
+        if ($addrBracket -in "(127.0.0.1)", "(::, 0.0.0.0)", "(0.0.0.0, ::)", "(::1)", "([::1])") {
+            continue
+        }
+        # Also check set-level equivalence for :: and 0.0.0.0
+        if ($addrList.Count -eq 1 -and $addrList[0] -in "127.0.0.1", "::1", "[::1]") {
+            continue
+        }
+        if ($addrList.Count -eq 2 -and ($addrList -contains "::" -and $addrList -contains "0.0.0.0")) {
+            continue
+        }
+
         $pidList = @($info.PIDs)
         $procNames = @()
         foreach ($procId in $pidList) {
