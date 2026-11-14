@@ -32,6 +32,10 @@
     .\poc\run.ps1 setup           # Verify & install dependencies for Python and Node
     .\poc\run.ps1 help            # Display reference guide and available commands
     .\poc\run.ps1 start-all       # Auto-start API, Web App, MCP UI & Abyssium Studio
+    .\poc\run.ps1 stop-all        # Stop all background jobs & shut down active ports
+    .\poc\run.ps1 open-urls       # Open all active web dashboards in browser
+    .\poc\run.ps1 healthz         # Run end-to-end automated health checks across services
+    .\poc\run.ps1 status          # Overview of git, venv, docker, and active ports
 #>
 [CmdletBinding()]
 param(
@@ -206,26 +210,34 @@ function Get-ActiveLabeled4DigitPorts {
 
 # Menu definition mapping numbers to actions and descriptions
 $MenuItems = [ordered]@{
-    "1"  = @{ Action = "start-all";   Category = "Quick Start";            Desc = "Auto-start API, Web App, MCP UI & Abyssium Studio" }
-    "2"  = @{ Action = "status";      Category = "Workspace Diagnostics"; Desc = "Workspace Status, Ports & Git Health" }
-    "3"  = @{ Action = "api";         Category = "Enterprise RAG Stack";   Desc = "Start FastAPI Backend (uvicorn on :8000)" }
-    "4"  = @{ Action = "ui";          Category = "Enterprise RAG Stack";   Desc = "Start Streamlit UI (streamlit on :8501)" }
-    "5"  = @{ Action = "mcp";         Category = "Enterprise RAG Stack";   Desc = "Start FastMCP Gateway (python -m app.mcp)" }
-    "6"  = @{ Action = "mcp-ui";      Category = "Enterprise RAG Stack";   Desc = "Start FastMCP Inspector / Evaluate UI (Local Testing)" }
-    "7"  = @{ Action = "test";        Category = "Enterprise RAG Stack";   Desc = "Run Pytest Suite (130 offline tests)" }
-    "8"  = @{ Action = "ingest";      Category = "Enterprise RAG Stack";   Desc = "Run Document Ingestion Pipeline" }
-    "9"  = @{ Action = "docker-up";   Category = "Enterprise RAG Stack";   Desc = "Start Postgres 16 (pgvector) + Jaeger" }
-    "10" = @{ Action = "docker-down"; Category = "Enterprise RAG Stack";   Desc = "Stop Docker Compose Services" }
-    "11" = @{ Action = "studio";      Category = "Abyssium Studio";        Desc = "Start Vite Dev Server (:5173)" }
-    "12" = @{ Action = "build";       Category = "Abyssium Studio";        Desc = "Build Production Bundle (Vite)" }
-    "13" = @{ Action = "lint";        Category = "Abyssium Studio";        Desc = "Run ESLint Validation" }
-    "14" = @{ Action = "ollama";      Category = "Ollama Local AI";        Desc = "Run Local DeepSeek Model (deepseek-r1:8b)" }
-    "15" = @{ Action = "activate";    Category = "Workspace Maintenance";  Desc = "Show Python venv Activation Command" }
-    "16" = @{ Action = "clean";       Category = "Workspace Maintenance";  Desc = "Safely Prune node_modules & pycache" }
-    "17" = @{ Action = "ports";       Category = "Workspace Maintenance";  Desc = "Find and Display All Active Listening Ports" }
-    "18" = @{ Action = "stop-ports";  Category = "Workspace Maintenance";  Desc = "Shut Down Active Processes from Option 17" }
-    "19" = @{ Action = "setup";       Category = "Workspace Maintenance";  Desc = "Verify & Install Python/Node Dependencies" }
-    "20" = @{ Action = "help";        Category = "Workspace Maintenance";  Desc = "Display Reference Guide & Help" }
+    "1"  = @{ Action = "start-all";    Category = "Quick Start";                    Desc = "Auto-start API, Web App, MCP UI & Abyssium Studio" }
+    "2"  = @{ Action = "stop-all";     Category = "Quick Start";                    Desc = "Stop Background Jobs & Shut Down Active Ports" }
+    "3"  = @{ Action = "open-urls";    Category = "Quick Start";                    Desc = "Open Active Web Dashboards in Browser" }
+
+    "4"  = @{ Action = "status";       Category = "Workspace Diagnostics & Health"; Desc = "Workspace Status, Ports, Git & Container Overview" }
+    "5"  = @{ Action = "ports";        Category = "Workspace Diagnostics & Health"; Desc = "Find and Display Active Labeled 4-Digit Ports" }
+    "6"  = @{ Action = "healthz";      Category = "Workspace Diagnostics & Health"; Desc = "Run Automated Health Check on Running Services" }
+
+    "7"  = @{ Action = "api";          Category = "Enterprise RAG Stack";           Desc = "Start FastAPI Backend (uvicorn on :8000)" }
+    "8"  = @{ Action = "ui";           Category = "Enterprise RAG Stack";           Desc = "Start Streamlit UI (streamlit on :8501)" }
+    "9"  = @{ Action = "mcp";          Category = "Enterprise RAG Stack";           Desc = "Start FastMCP Gateway (python -m app.mcp)" }
+    "10" = @{ Action = "mcp-ui";       Category = "Enterprise RAG Stack";           Desc = "Start FastMCP Inspector / Evaluate UI (Local Testing)" }
+    "11" = @{ Action = "test";         Category = "Enterprise RAG Stack";           Desc = "Run Pytest Suite (130 offline tests)" }
+    "12" = @{ Action = "ingest";       Category = "Enterprise RAG Stack";           Desc = "Run Document Ingestion Pipeline" }
+    "13" = @{ Action = "docker-up";    Category = "Enterprise RAG Stack";           Desc = "Start Postgres 16 (pgvector) + Jaeger" }
+    "14" = @{ Action = "docker-down";  Category = "Enterprise RAG Stack";           Desc = "Stop Docker Compose Services" }
+
+    "15" = @{ Action = "studio";       Category = "Abyssium Studio";                Desc = "Start Vite Dev Server (:5173)" }
+    "16" = @{ Action = "build";        Category = "Abyssium Studio";                Desc = "Build Production Bundle (Vite)" }
+    "17" = @{ Action = "lint";         Category = "Abyssium Studio";                Desc = "Run ESLint Validation" }
+
+    "18" = @{ Action = "ollama";       Category = "Ollama Local AI";                Desc = "Run Local DeepSeek Model (deepseek-r1:8b)" }
+
+    "19" = @{ Action = "stop-ports";   Category = "Workspace Maintenance";          Desc = "Shut Down Active Processes from Option 5" }
+    "20" = @{ Action = "activate";     Category = "Workspace Maintenance";          Desc = "Show Python venv Activation Command" }
+    "21" = @{ Action = "clean";        Category = "Workspace Maintenance";          Desc = "Safely Prune node_modules & pycache" }
+    "22" = @{ Action = "setup";        Category = "Workspace Maintenance";          Desc = "Verify & Install Python/Node Dependencies" }
+    "23" = @{ Action = "help";         Category = "Workspace Maintenance";          Desc = "Display Reference Guide & Help" }
 }
 
 function Show-Header {
@@ -262,7 +274,17 @@ function Show-Help {
     Write-Host "Usage: .\poc\run.ps1 [command] [extra arguments]" -ForegroundColor Yellow
     Write-Host "       .\poc\run.ps1 (without arguments launches interactive numbered menu)`n" -ForegroundColor DarkGray
 
-    Write-Host "Enterprise RAG Stack (enterprise-rag-pgvector-rbac):" -ForegroundColor Green
+    Write-Host "Quick Start:" -ForegroundColor Green
+    Write-Host "  start-all, all     Auto-start FastAPI API, Streamlit Web App, FastMCP Inspector UI & Abyssium Studio (background jobs)"
+    Write-Host "  stop-all, kill-all Stop all background jobs and shut down active labeled workspace ports"
+    Write-Host "  open-urls, urls    Open all active workspace dashboards in default web browser"
+
+    Write-Host "`nWorkspace Diagnostics & Health:" -ForegroundColor Green
+    Write-Host "  status, st         Show git status, active listening ports, venv, and containers"
+    Write-Host "  ports, active-ports Find and list active labeled 4-digit ports with process details"
+    Write-Host "  healthz, health    Run automated HTTP health checks across running web services"
+
+    Write-Host "`nEnterprise RAG Stack (enterprise-rag-pgvector-rbac):" -ForegroundColor Green
     Write-Host "  api, rag-api       Start FastAPI backend (uvicorn app.main:app on :8000)"
     Write-Host "  ui, streamlit      Start Streamlit UI (streamlit run streamlit_app.py on :8501)"
     Write-Host "  mcp, rag-mcp       Start FastMCP Gateway (python -m app.mcp)"
@@ -282,15 +304,11 @@ function Show-Help {
     Write-Host "  ollama             Run local DeepSeek model (deepseek-r1:8b --verbose)"
 
     Write-Host "`nWorkspace Maintenance:" -ForegroundColor Green
-    Write-Host "  status, st         Show git status, active listening ports, venv, and containers"
-    Write-Host "  ports, active-ports Find and list all active listening TCP ports with process details"
-    Write-Host "  setup              Verify & install dependencies for Python and Node projects"
+    Write-Host "  stop-ports, kill-ports Shut down active processes on labeled 4-digit ports (from option 5)"
+    Write-Host "  activate           Show Python venv activation command"
     Write-Host "  clean              Safely purge node_modules and pycache (excludes .venv)"
-    Write-Host "  stop-ports, kill-ports Shut down processes on active labeled 4-digit ports (from option 17)"
+    Write-Host "  setup              Verify & install dependencies for Python and Node projects"
     Write-Host "  help, ?            Display this reference guide`n"
-
-    Write-Host "Quick Start:" -ForegroundColor Green
-    Write-Host "  start-all, all     Auto-start FastAPI API, Streamlit Web App, FastMCP Inspector UI & Abyssium Studio (background jobs)`n"
 }
 
 function Start-MenuLoop {
@@ -657,6 +675,137 @@ function Invoke-WorkspaceAction {
         Write-Host "  MCP UI:     FastMCP Inspector" -ForegroundColor Cyan
         Write-Host "  Studio:     http://localhost:5173" -ForegroundColor Cyan
         Write-Host "`nMonitor jobs: Get-Job  |  View output: Receive-Job -Name <jobName>  |  Stop jobs: Stop-Job -Name <jobName>" -ForegroundColor DarkGray
+    }
+
+    # -------------------------------------------------------------
+    # Quick Start: Stop All Background Jobs & Active Ports
+    # -------------------------------------------------------------
+    { $_ -in "stop-all", "kill-all", "shutdown-all" } {
+        Show-Header "Stopping All Workspace Services & Releasing Ports" "Yellow"
+
+        # 1. Terminate PowerShell background jobs
+        $jobNames = @("RAG-API", "RAG-WebApp", "MCP-UI", "Abyssium")
+        $stoppedJobs = 0
+        foreach ($jName in $jobNames) {
+            $existingJob = Get-Job -Name $jName -ErrorAction SilentlyContinue
+            if ($existingJob) {
+                Write-Host "Stopping PowerShell job '$jName'..." -ForegroundColor Cyan
+                Stop-Job -Name $jName -ErrorAction SilentlyContinue | Out-Null
+                Remove-Job -Name $jName -Force -ErrorAction SilentlyContinue | Out-Null
+                $stoppedJobs++
+            }
+        }
+        if ($stoppedJobs -gt 0) {
+            Write-Host "[OK] Stopped $stoppedJobs background PowerShell job(s)." -ForegroundColor Green
+        } else {
+            Write-Host "No active PowerShell background jobs found." -ForegroundColor DarkGray
+        }
+
+        # 2. Shut down remaining active ports via stop-ports
+        Write-Host "`nReleasing active listening ports..." -ForegroundColor Cyan
+        Invoke-WorkspaceAction -TargetAction "stop-ports" -Arguments @()
+    }
+
+    # -------------------------------------------------------------
+    # Quick Start: Open Web Dashboards in Browser
+    # -------------------------------------------------------------
+    { $_ -in "open-urls", "urls", "dashboards", "browser" } {
+        Show-Header "Opening Active Web Dashboards in Browser" "Cyan"
+
+        $activeMap = Get-ActiveLabeled4DigitPorts
+        $UrlMap = [ordered]@{
+            5173  = @{ Name = "Abyssium Studio (Vite)";          Url = "http://localhost:5173" }
+            8501  = @{ Name = "Streamlit Zero-Trust UI";         Url = "http://localhost:8501" }
+            8000  = @{ Name = "FastAPI Swagger API Docs";        Url = "http://localhost:8000/docs" }
+            6274  = @{ Name = "FastMCP Inspector / Eval UI";     Url = "http://localhost:6274" }
+            16686 = @{ Name = "Jaeger Distributed Tracing UI";   Url = "http://localhost:16686" }
+            3210  = @{ Name = "LobeChat / AI Web UI";            Url = "http://localhost:3210" }
+        }
+
+        $opened = 0
+        foreach ($entry in $UrlMap.GetEnumerator()) {
+            $port = [int]$entry.Key
+            $meta = $entry.Value
+            if ($activeMap.ContainsKey($port) -or ($port -eq 16686 -and (Test-NetConnection -ComputerName localhost -Port 16686 -WarningAction SilentlyContinue).TcpTestSucceeded)) {
+                Write-Host "Launching $($meta.Name): $($meta.Url)..." -ForegroundColor Green
+                Start-Process $meta.Url
+                $opened++
+            } else {
+                Write-Host "Skipping $($meta.Name) (Port $port is offline)" -ForegroundColor DarkGray
+            }
+        }
+
+        if ($opened -eq 0) {
+            Write-Host "`nNo web services are currently online. Start services with Option 1 (start-all) first." -ForegroundColor Yellow
+        } else {
+            Write-Host "`nOpened $opened active dashboard(s) in default web browser." -ForegroundColor Green
+        }
+    }
+
+    # -------------------------------------------------------------
+    # Automated Health Checks (Endpoint Probes)
+    # -------------------------------------------------------------
+    { $_ -in "healthz", "health", "check-health" } {
+        Show-Header "Workspace End-to-End Automated Health Probe" "Cyan"
+        Write-Host "Probing core endpoints and services...`n" -ForegroundColor DarkGray
+
+        $Endpoints = @(
+            @{ Name = "FastAPI Healthz";        Url = "http://localhost:8000/healthz"; Expected = 200 }
+            @{ Name = "FastAPI Readyz";         Url = "http://localhost:8000/readyz";  Expected = 200 }
+            @{ Name = "FastAPI OpenAPI Schema"; Url = "http://localhost:8000/docs";    Expected = 200 }
+            @{ Name = "Streamlit UI";           Url = "http://localhost:8501";        Expected = 200 }
+            @{ Name = "Abyssium Studio (Vite)"; Url = "http://localhost:5173";        Expected = 200 }
+        )
+
+        foreach ($ep in $Endpoints) {
+            $sw = [System.Diagnostics.Stopwatch]::StartNew()
+            try {
+                $response = Invoke-WebRequest -Uri $ep.Url -Method Get -TimeoutSec 3 -UseBasicParsing -ErrorAction Stop
+                $sw.Stop()
+                $code = $response.StatusCode
+                $color = if ($code -eq $ep.Expected) { "Green" } else { "Yellow" }
+                Write-Host "  * " -NoNewline
+                Write-Host ("{0,-28}" -f $ep.Name) -ForegroundColor White -NoNewline
+                Write-Host (" [HTTP $code]") -ForegroundColor $color -NoNewline
+                Write-Host (" in {0}ms" -f $sw.ElapsedMilliseconds) -ForegroundColor DarkGray
+            } catch {
+                $sw.Stop()
+                Write-Host "  * " -NoNewline
+                Write-Host ("{0,-28}" -f $ep.Name) -ForegroundColor White -NoNewline
+                Write-Host " [OFFLINE/UNREACHABLE]" -ForegroundColor Red -NoNewline
+                Write-Host (" ($($_.Exception.Message))") -ForegroundColor DarkGray
+            }
+        }
+
+        # PostgreSQL & Docker Health Check
+        Write-Host "`n[Database & Container Health]" -ForegroundColor Yellow
+        try {
+            $pgContainer = docker inspect zero_trust_pgvector --format "{{.State.Health.Status}}" 2>$null
+            if ($pgContainer) {
+                $pgColor = if ($pgContainer -eq "healthy") { "Green" } else { "Yellow" }
+                Write-Host "  * zero_trust_pgvector       : " -NoNewline
+                Write-Host "[$pgContainer]" -ForegroundColor $pgColor
+            } else {
+                Write-Host "  * zero_trust_pgvector       : [NOT RUNNING]" -ForegroundColor DarkGray
+            }
+        } catch {
+            Write-Host "  * Docker status unavailable." -ForegroundColor DarkGray
+        }
+
+        try {
+            $jaegerContainer = docker inspect zero_trust_jaeger --format "{{.State.Status}}" 2>$null
+            if ($jaegerContainer) {
+                $jColor = if ($jaegerContainer -eq "running") { "Green" } else { "Yellow" }
+                Write-Host "  * zero_trust_jaeger         : " -NoNewline
+                Write-Host "[$jaegerContainer]" -ForegroundColor $jColor
+            } else {
+                Write-Host "  * zero_trust_jaeger         : [NOT RUNNING]" -ForegroundColor DarkGray
+            }
+        } catch {
+            # Ignore
+        }
+
+        Write-Host ""
     }
 
     # -------------------------------------------------------------
