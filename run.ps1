@@ -276,7 +276,33 @@ function Invoke-WorkspaceAction {
 
         # 3. Active Ports
         Write-Host "`n[Services & Port Listeners]" -ForegroundColor Yellow
-        $ListeningPorts = @((Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue).LocalPort)
+        $ListeningPorts = @()
+        try {
+            $rawConns = Get-NetTCPConnection -ErrorAction SilentlyContinue
+            if ($rawConns) {
+                $ListeningPorts = @($rawConns | Where-Object {
+                    $s = [int]$_.State
+                    $rp = [int]$_.RemotePort
+                    $ra = "$($_.RemoteAddress)".Trim()
+                    ($s -eq 2) -or ($s -eq 0 -and $rp -eq 0 -and ($ra -in '0.0.0.0', '::', ''))
+                } | Select-Object -ExpandProperty LocalPort -Unique)
+            }
+        } catch {
+            # Fallback
+        }
+        if ($ListeningPorts.Count -eq 0) {
+            try {
+                $netLines = cmd /c "netstat -ano" 2>$null
+                foreach ($nl in $netLines) {
+                    if ($nl -match '^\s*TCP\s+\S+:(\d+)\s+\S+\s+LISTENING\s+\d+\s*$') {
+                        $ListeningPorts += [int]$matches[1]
+                    }
+                }
+                $ListeningPorts = @($ListeningPorts | Select-Object -Unique)
+            } catch {
+                # Ignore
+            }
+        }
         $ServiceMap = [ordered]@{
             8000  = "FastAPI Gateway (enterprise-rag)"
             8501  = "Streamlit UI (enterprise-rag)"
@@ -589,7 +615,12 @@ function Invoke-WorkspaceAction {
 
             # Attempt 1: Get-NetTCPConnection (PowerShell native)
             try {
-                $connections = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
+                $connections = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue | Where-Object {
+                    $s = [int]$_.State
+                    $rp = [int]$_.RemotePort
+                    $ra = "$($_.RemoteAddress)".Trim()
+                    ($s -eq 2) -or ($s -eq 0 -and $rp -eq 0 -and ($ra -in '0.0.0.0', '::', ''))
+                }
                 if ($connections) {
                     foreach ($conn in $connections) {
                         if ($conn.OwningProcess -and $conn.OwningProcess -gt 0) {
@@ -685,26 +716,32 @@ function Invoke-WorkspaceAction {
         }
 
         # Structure: hashtable keyed by [int]Port -> Custom Object @{ Port, IPList, PIDSet }
-        $PortMap = [ordered]@{}
+        $PortMap = @{}
 
-        # Strategy 1: PowerShell Get-NetTCPConnection
+        # Strategy 1: PowerShell Get-NetTCPConnection (inspects State 2 [Listen] and State 0 [Bound/Listen])
         try {
-            $tcpConns = Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue
+            $tcpConns = Get-NetTCPConnection -ErrorAction SilentlyContinue
             if ($tcpConns) {
                 foreach ($conn in $tcpConns) {
                     $p = [int]$conn.LocalPort
-                    $ip = "$($conn.LocalAddress)".Trim()
+                    $stateVal = [int]$conn.State
                     $procId = [int]$conn.OwningProcess
+                    $rPort = [int]$conn.RemotePort
+                    $rAddr = "$($conn.RemoteAddress)".Trim()
 
-                    if (-not $PortMap.Contains($p)) {
-                        $PortMap[$p] = [PSCustomObject]@{
-                            Port      = $p
-                            Addresses = [System.Collections.Generic.HashSet[string]]::new()
-                            PIDs      = [System.Collections.Generic.HashSet[int]]::new()
+                    $isListener = ($stateVal -eq 2) -or ($stateVal -eq 0 -and $rPort -eq 0 -and ($rAddr -in '0.0.0.0', '::', ''))
+                    if ($isListener -and $p -gt 0) {
+                        if (-not $PortMap.ContainsKey($p)) {
+                            $PortMap[$p] = [PSCustomObject]@{
+                                Port      = $p
+                                Addresses = [System.Collections.Generic.HashSet[string]]::new()
+                                PIDs      = [System.Collections.Generic.HashSet[int]]::new()
+                            }
                         }
+                        $ip = "$($conn.LocalAddress)".Trim()
+                        if ($ip) { $null = $PortMap[$p].Addresses.Add($ip) }
+                        if ($procId -gt 0) { $null = $PortMap[$p].PIDs.Add($procId) }
                     }
-                    if ($ip) { $null = $PortMap[$p].Addresses.Add($ip) }
-                    if ($procId -gt 0) { $null = $PortMap[$p].PIDs.Add($procId) }
                 }
             }
         } catch {
@@ -713,23 +750,25 @@ function Invoke-WorkspaceAction {
 
         # Strategy 2: netstat -ano fallback / supplement
         try {
-            $netstatLines = netstat -ano 2>$null | Select-String -Pattern "LISTENING"
+            $netstatLines = cmd /c "netstat -ano" 2>$null
             foreach ($line in $netstatLines) {
-                $str = $line.ToString().Trim()
+                $str = $line.Trim()
                 if ($str -match '^\s*TCP\s+(\S+):(\d+)\s+\S+\s+LISTENING\s+(\d+)\s*$') {
                     $ip = $matches[1]
                     $p = [int]$matches[2]
                     $procId = [int]$matches[3]
 
-                    if (-not $PortMap.Contains($p)) {
-                        $PortMap[$p] = [PSCustomObject]@{
-                            Port      = $p
-                            Addresses = [System.Collections.Generic.HashSet[string]]::new()
-                            PIDs      = [System.Collections.Generic.HashSet[int]]::new()
+                    if ($p -gt 0) {
+                        if (-not $PortMap.ContainsKey($p)) {
+                            $PortMap[$p] = [PSCustomObject]@{
+                                Port      = $p
+                                Addresses = [System.Collections.Generic.HashSet[string]]::new()
+                                PIDs      = [System.Collections.Generic.HashSet[int]]::new()
+                            }
                         }
+                        if ($ip) { $null = $PortMap[$p].Addresses.Add($ip) }
+                        if ($procId -gt 0) { $null = $PortMap[$p].PIDs.Add($procId) }
                     }
-                    if ($ip) { $null = $PortMap[$p].Addresses.Add($ip) }
-                    if ($procId -gt 0) { $null = $PortMap[$p].PIDs.Add($procId) }
                 }
             }
         } catch {
