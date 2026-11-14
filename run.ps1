@@ -27,8 +27,8 @@
     .\poc\run.ps1 ollama          # Run local Ollama AI session (deepseek-r1:8b)
     .\poc\run.ps1 activate        # Show Python venv activation command
     .\poc\run.ps1 clean           # Safely prune node_modules and pycache (excludes .venv)
-    .\poc\run.ps1 stop-ports      # Shut down processes on ports 5173, 8501, 8000, 6274
     .\poc\run.ps1 ports           # Find and list all active listening ports and processes
+    .\poc\run.ps1 stop-ports      # Shut down processes on ports 5173, 8501, 8000, 6274
     .\poc\run.ps1 setup           # Verify & install dependencies for Python and Node
     .\poc\run.ps1 help            # Display reference guide and available commands
     .\poc\run.ps1 start-all       # Auto-start API, Web App, MCP UI & Abyssium Studio
@@ -81,8 +81,8 @@ $MenuItems = [ordered]@{
     "14" = @{ Action = "ollama";      Category = "Ollama Local AI";        Desc = "Run Local DeepSeek Model (deepseek-r1:8b)" }
     "15" = @{ Action = "activate";    Category = "Workspace Maintenance";  Desc = "Show Python venv Activation Command" }
     "16" = @{ Action = "clean";       Category = "Workspace Maintenance";  Desc = "Safely Prune node_modules & pycache" }
-    "17" = @{ Action = "stop-ports";  Category = "Workspace Maintenance";  Desc = "Shut Down Processes on Ports (5173, 8501, 8000, 6274)" }
-    "18" = @{ Action = "ports";       Category = "Workspace Maintenance";  Desc = "Find and Display All Active Listening Ports" }
+    "17" = @{ Action = "ports";       Category = "Workspace Maintenance";  Desc = "Find and Display All Active Listening Ports" }
+    "18" = @{ Action = "stop-ports";  Category = "Workspace Maintenance";  Desc = "Shut Down Processes on Ports (5173, 8501, 8000, 6274)" }
     "19" = @{ Action = "setup";       Category = "Workspace Maintenance";  Desc = "Verify & Install Python/Node Dependencies" }
     "20" = @{ Action = "help";        Category = "Workspace Maintenance";  Desc = "Display Reference Guide & Help" }
 }
