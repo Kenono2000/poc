@@ -76,9 +76,11 @@ $GlobalKnownServices = @{
     4317  = "Jaeger OTLP gRPC"
     4318  = "Jaeger OTLP HTTP"
     5173  = "Abyssium Studio (Vite)"
+    5190  = "Suntiq Web Admin (Vite)"
     5432  = "PostgreSQL (pgvector)"
     6274  = "Dev Service"
     6379  = "Redis Server"
+    6790  = "Convex Backend Service"
     8000  = "FastAPI Gateway (enterprise-rag)"
     8080  = "HTTP Alternative / Proxy"
     8501  = "Streamlit UI (enterprise-rag)"
@@ -88,7 +90,7 @@ $GlobalKnownServices = @{
 }
 
 # Processes to always skip from active inspection/shutdown
-$GlobalSkipProcesses = @("system", "onedrive", "antigravity")
+$GlobalSkipProcesses = @("system", "onedrive", "antigravity", "com.docker.backend")
 
 function Get-ActiveLabeled4DigitPorts {
     $portMap = @{}
@@ -154,27 +156,11 @@ function Get-ActiveLabeled4DigitPorts {
         # Ignore netstat errors
     }
 
-    # Filter out entries where all processes match skipped processes ('system', 'onedrive', 'antigravity')
-    # and filter out excluded bound addresses ('(127.0.0.1)', '(::, 0.0.0.0)', '(::1)')
+    # Filter out entries where all processes match skipped processes ('system', 'onedrive', 'antigravity', 'com.docker.backend')
     $filteredMap = @{}
     $sorted = @($portMap.Keys | Sort-Object)
     foreach ($p in $sorted) {
         $info = $portMap[$p]
-
-        # Address filtering
-        $addrList = @($info.Addresses)
-        $addrStr = if ($addrList.Count -gt 0) { $addrList -join ", " } else { "*" }
-        $addrBracket = "($addrStr)"
-        if ($addrBracket -in "(127.0.0.1)", "(::, 0.0.0.0)", "(0.0.0.0, ::)", "(::1)", "([::1])") {
-            continue
-        }
-        # Also check set-level equivalence for :: and 0.0.0.0
-        if ($addrList.Count -eq 1 -and $addrList[0] -in "127.0.0.1", "::1", "[::1]") {
-            continue
-        }
-        if ($addrList.Count -eq 2 -and ($addrList -contains "::" -and $addrList -contains "0.0.0.0")) {
-            continue
-        }
 
         $pidList = @($info.PIDs)
         $procNames = @()
