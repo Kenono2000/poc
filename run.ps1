@@ -28,7 +28,7 @@
     .\poc\run.ps1 activate        # Show Python venv activation command
     .\poc\run.ps1 clean           # Safely prune node_modules and pycache (excludes .venv)
     .\poc\run.ps1 ports           # Find and list all active listening ports and processes
-    .\poc\run.ps1 stop-ports      # Shut down processes on ports 5173, 8501, 8000, 6274
+    .\poc\run.ps1 stop-ports      # Shut down processes on active labeled 4-digit ports
     .\poc\run.ps1 setup           # Verify & install dependencies for Python and Node
     .\poc\run.ps1 help            # Display reference guide and available commands
     .\poc\run.ps1 start-all       # Auto-start API, Web App, MCP UI & Abyssium Studio
@@ -63,6 +63,130 @@ $VenvMcp = Join-Path $WorkspaceRoot ".venv\Scripts\mcp.exe"
 $VenvActivate = Join-Path $WorkspaceRoot ".venv\Scripts\Activate.ps1"
 $PythonCmd = if (Test-Path $VenvPython) { $VenvPython } else { "python" }
 
+# Recognized services dictionary with descriptive labels
+$GlobalKnownServices = @{
+    80    = "HTTP Web Server"
+    443   = "HTTPS Web Server"
+    3000  = "Dev Server / React / Next.js"
+    3210  = "LobeChat / AI Web UI"
+    4317  = "Jaeger OTLP gRPC"
+    4318  = "Jaeger OTLP HTTP"
+    5173  = "Abyssium Studio (Vite)"
+    5432  = "PostgreSQL (pgvector)"
+    6274  = "Dev Service"
+    6379  = "Redis Server"
+    8000  = "FastAPI Gateway (enterprise-rag)"
+    8080  = "HTTP Alternative / Proxy"
+    8501  = "Streamlit UI (enterprise-rag)"
+    9090  = "Prometheus Server"
+    11434 = "Ollama Local AI Server"
+    16686 = "Jaeger Tracing UI"
+}
+
+# Processes to always skip from active inspection/shutdown
+$GlobalSkipProcesses = @("system", "onedrive", "antigravity")
+
+function Get-ActiveLabeled4DigitPorts {
+    $portMap = @{}
+
+    # Strategy 1: PowerShell Get-NetTCPConnection (inspects State 2 [Listen] and State 0 [Bound/Listen])
+    try {
+        $tcpConns = Get-NetTCPConnection -ErrorAction SilentlyContinue
+        if ($tcpConns) {
+            foreach ($conn in $tcpConns) {
+                $p = [int]$conn.LocalPort
+                $stateVal = [int]$conn.State
+                $procId = [int]$conn.OwningProcess
+                $rPort = [int]$conn.RemotePort
+                $rAddr = "$($conn.RemoteAddress)".Trim()
+
+                $isListener = ($stateVal -eq 2) -or ($stateVal -eq 0 -and $rPort -eq 0 -and ($rAddr -in '0.0.0.0', '::', ''))
+                if ($isListener -and $p -ge 1000 -and $p -le 9999) {
+                    if ($GlobalKnownServices.ContainsKey($p)) {
+                        if (-not $portMap.ContainsKey($p)) {
+                            $portMap[$p] = [PSCustomObject]@{
+                                Port        = $p
+                                ServiceDesc = $GlobalKnownServices[$p]
+                                Addresses   = [System.Collections.Generic.HashSet[string]]::new()
+                                PIDs        = [System.Collections.Generic.HashSet[int]]::new()
+                            }
+                        }
+                        $ip = "$($conn.LocalAddress)".Trim()
+                        if ($ip) { $null = $portMap[$p].Addresses.Add($ip) }
+                        if ($procId -gt 0) { $null = $portMap[$p].PIDs.Add($procId) }
+                    }
+                }
+            }
+        }
+    } catch {
+        # Fallback handled below
+    }
+
+    # Strategy 2: netstat -ano fallback / supplement
+    try {
+        $netstatLines = cmd /c "netstat -ano" 2>$null
+        foreach ($line in $netstatLines) {
+            $str = $line.Trim()
+            if ($str -match '^\s*TCP\s+(\S+):(\d+)\s+\S+\s+LISTENING\s+(\d+)\s*$') {
+                $ip = $matches[1]
+                $p = [int]$matches[2]
+                $procId = [int]$matches[3]
+
+                if ($p -ge 1000 -and $p -le 9999 -and $GlobalKnownServices.ContainsKey($p)) {
+                    if (-not $portMap.ContainsKey($p)) {
+                        $portMap[$p] = [PSCustomObject]@{
+                            Port        = $p
+                            ServiceDesc = $GlobalKnownServices[$p]
+                            Addresses   = [System.Collections.Generic.HashSet[string]]::new()
+                            PIDs        = [System.Collections.Generic.HashSet[int]]::new()
+                        }
+                    }
+                    if ($ip) { $null = $portMap[$p].Addresses.Add($ip) }
+                    if ($procId -gt 0) { $null = $portMap[$p].PIDs.Add($procId) }
+                }
+            }
+        }
+    } catch {
+        # Ignore netstat errors
+    }
+
+    # Filter out entries where all processes match skipped processes ('system', 'onedrive', 'antigravity')
+    $filteredMap = @{}
+    $sorted = @($portMap.Keys | Sort-Object)
+    foreach ($p in $sorted) {
+        $info = $portMap[$p]
+        $pidList = @($info.PIDs)
+        $procNames = @()
+        foreach ($procId in $pidList) {
+            try {
+                $proc = Get-Process -Id $procId -ErrorAction SilentlyContinue
+                if ($proc -and $proc.Name) {
+                    if ($procNames -notcontains $proc.Name) { $procNames += $proc.Name }
+                }
+            } catch {
+                # Ignore
+            }
+        }
+
+        $shouldSkip = $false
+        if ($procNames.Count -gt 0) {
+            $matchedSkips = @($procNames | Where-Object {
+                $name = $_.ToLower()
+                $GlobalSkipProcesses | Where-Object { $name -like "*$_*" }
+            })
+            if ($matchedSkips.Count -eq $procNames.Count) {
+                $shouldSkip = $true
+            }
+        }
+        if (-not $shouldSkip) {
+            $info | Add-Member -MemberType NoteProperty -Name "ProcessNames" -Value $procNames -Force
+            $filteredMap[$p] = $info
+        }
+    }
+
+    return $filteredMap
+}
+
 # Menu definition mapping numbers to actions and descriptions
 $MenuItems = [ordered]@{
     "1"  = @{ Action = "start-all";   Category = "Quick Start";            Desc = "Auto-start API, Web App, MCP UI & Abyssium Studio" }
@@ -82,7 +206,7 @@ $MenuItems = [ordered]@{
     "15" = @{ Action = "activate";    Category = "Workspace Maintenance";  Desc = "Show Python venv Activation Command" }
     "16" = @{ Action = "clean";       Category = "Workspace Maintenance";  Desc = "Safely Prune node_modules & pycache" }
     "17" = @{ Action = "ports";       Category = "Workspace Maintenance";  Desc = "Find and Display All Active Listening Ports" }
-    "18" = @{ Action = "stop-ports";  Category = "Workspace Maintenance";  Desc = "Shut Down Processes on Ports (5173, 8501, 8000, 6274)" }
+    "18" = @{ Action = "stop-ports";  Category = "Workspace Maintenance";  Desc = "Shut Down Active Processes from Option 17" }
     "19" = @{ Action = "setup";       Category = "Workspace Maintenance";  Desc = "Verify & Install Python/Node Dependencies" }
     "20" = @{ Action = "help";        Category = "Workspace Maintenance";  Desc = "Display Reference Guide & Help" }
 }
@@ -145,7 +269,7 @@ function Show-Help {
     Write-Host "  ports, active-ports Find and list all active listening TCP ports with process details"
     Write-Host "  setup              Verify & install dependencies for Python and Node projects"
     Write-Host "  clean              Safely purge node_modules and pycache (excludes .venv)"
-    Write-Host "  stop-ports, kill-ports Shut down processes on ports 5173, 8501, 8000, 6274"
+    Write-Host "  stop-ports, kill-ports Shut down processes on active labeled 4-digit ports (from option 17)"
     Write-Host "  help, ?            Display this reference guide`n"
 
     Write-Host "Quick Start:" -ForegroundColor Green
@@ -601,53 +725,27 @@ function Invoke-WorkspaceAction {
     }
 
     # -------------------------------------------------------------
-    # Shut Down Processes on Specified Ports
+    # Shut Down Processes on Active Labeled Ports (from Option 17)
     # -------------------------------------------------------------
     { $_ -in "stop-ports", "kill-ports", "killports", "shutdown-ports" } {
-        Show-Header "Shutting Down Processes on Ports (5173, 8501, 8000, 6274)" "Yellow"
+        Show-Header "Shutting Down Processes from Option 17 (Active Labeled Ports)" "Yellow"
 
-        $targetPorts = @(5173, 8501, 8000, 6274)
+        $activeMap = Get-ActiveLabeled4DigitPorts
+        $targetPorts = @($activeMap.Keys | Sort-Object)
+
+        if ($targetPorts.Count -eq 0) {
+            Write-Host "No active labeled 4-digit ports detected to shut down." -ForegroundColor Green
+            return
+        }
+
         $killedCount = 0
 
         foreach ($port in $targetPorts) {
-            Write-Host "Checking port $port..." -ForegroundColor Cyan
-            $pidsToKill = [System.Collections.Generic.HashSet[int]]::new()
+            $info = $activeMap[$port]
+            $serviceDesc = $info.ServiceDesc
+            $pidsToKill = @($info.PIDs)
 
-            # Attempt 1: Get-NetTCPConnection (PowerShell native)
-            try {
-                $connections = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue | Where-Object {
-                    $s = [int]$_.State
-                    $rp = [int]$_.RemotePort
-                    $ra = "$($_.RemoteAddress)".Trim()
-                    ($s -eq 2) -or ($s -eq 0 -and $rp -eq 0 -and ($ra -in '0.0.0.0', '::', ''))
-                }
-                if ($connections) {
-                    foreach ($conn in $connections) {
-                        if ($conn.OwningProcess -and $conn.OwningProcess -gt 0) {
-                            $null = $pidsToKill.Add($conn.OwningProcess)
-                        }
-                    }
-                }
-            } catch {
-                # Fallback handled below
-            }
-
-            # Attempt 2: netstat -ano fallback
-            try {
-                $netstatLines = netstat -ano 2>$null | Select-String -Pattern ":$port\s+"
-                foreach ($line in $netstatLines) {
-                    $str = $line.ToString().Trim()
-                    if ($str -match '^\s*TCP\s+\S+:(\d+)\s+\S+\s+LISTENING\s+(\d+)\s*$') {
-                        $matchedPort = [int]$matches[1]
-                        $matchedPid = [int]$matches[2]
-                        if ($matchedPort -eq $port -and $matchedPid -gt 0) {
-                            $null = $pidsToKill.Add($matchedPid)
-                        }
-                    }
-                }
-            } catch {
-                # Ignore netstat errors
-            }
+            Write-Host "Checking port $port ($serviceDesc)..." -ForegroundColor Cyan
 
             if ($pidsToKill.Count -eq 0) {
                 Write-Host "  * Port $port : No active process found." -ForegroundColor DarkGray
@@ -656,12 +754,12 @@ function Invoke-WorkspaceAction {
                     $procName = "PID $procId"
                     try {
                         $proc = Get-Process -Id $procId -ErrorAction SilentlyContinue
-                        if ($proc) { $procName = "$($proc.Name) (PID $procId)" }
+                        if ($proc -and $proc.Name) { $procName = "$($proc.Name) (PID $procId)" }
                     } catch {
                         # Ignore
                     }
 
-                    Write-Host "  * Terminating $procName on port $port..." -ForegroundColor Yellow
+                    Write-Host "  * Terminating $procName on port $port ($serviceDesc)..." -ForegroundColor Yellow
                     try {
                         Stop-Process -Id $procId -Force -ErrorAction Stop
                         Write-Host "    [SUCCESS] Process $procId terminated." -ForegroundColor Green
@@ -685,148 +783,38 @@ function Invoke-WorkspaceAction {
         if ($killedCount -gt 0) {
             Write-Host "Port shutdown complete: $killedCount process(es) terminated." -ForegroundColor Green
         } else {
-            Write-Host "Port shutdown complete: All specified ports (5173, 8501, 8000, 6274) were already clear." -ForegroundColor Green
+            Write-Host "Port shutdown complete: All active ports were already clear." -ForegroundColor Green
         }
     }
 
     # -------------------------------------------------------------
-    # Find All Active Listening Ports
+    # Find All Active Listening Ports (Option 17)
     # -------------------------------------------------------------
     { $_ -in "ports", "active-ports", "list-ports", "show-ports", "find-ports" } {
         Show-Header "Active Listening Ports & Bound Processes" "Cyan"
         Write-Host "Scanning active TCP listeners across system..." -ForegroundColor DarkGray
 
-        $KnownServices = @{
-            80    = "HTTP Web Server"
-            443   = "HTTPS Web Server"
-            3000  = "Dev Server / React / Next.js"
-            3210  = "LobeChat / AI Web UI"
-            4317  = "Jaeger OTLP gRPC"
-            4318  = "Jaeger OTLP HTTP"
-            5173  = "Abyssium Studio (Vite)"
-            5432  = "PostgreSQL (pgvector)"
-            6274  = "Dev Service"
-            6379  = "Redis Server"
-            8000  = "FastAPI Gateway (enterprise-rag)"
-            8080  = "HTTP Alternative / Proxy"
-            8501  = "Streamlit UI (enterprise-rag)"
-            9090  = "Prometheus Server"
-            11434 = "Ollama Local AI Server"
-            16686 = "Jaeger Tracing UI"
-        }
+        $activeMap = Get-ActiveLabeled4DigitPorts
+        $sortedPorts = @($activeMap.Keys | Sort-Object)
 
-        # Structure: hashtable keyed by [int]Port -> Custom Object @{ Port, IPList, PIDSet }
-        $PortMap = @{}
-
-        # Strategy 1: PowerShell Get-NetTCPConnection (inspects State 2 [Listen] and State 0 [Bound/Listen])
-        try {
-            $tcpConns = Get-NetTCPConnection -ErrorAction SilentlyContinue
-            if ($tcpConns) {
-                foreach ($conn in $tcpConns) {
-                    $p = [int]$conn.LocalPort
-                    $stateVal = [int]$conn.State
-                    $procId = [int]$conn.OwningProcess
-                    $rPort = [int]$conn.RemotePort
-                    $rAddr = "$($conn.RemoteAddress)".Trim()
-
-                    $isListener = ($stateVal -eq 2) -or ($stateVal -eq 0 -and $rPort -eq 0 -and ($rAddr -in '0.0.0.0', '::', ''))
-                    if ($isListener -and $p -gt 0) {
-                        if (-not $PortMap.ContainsKey($p)) {
-                            $PortMap[$p] = [PSCustomObject]@{
-                                Port      = $p
-                                Addresses = [System.Collections.Generic.HashSet[string]]::new()
-                                PIDs      = [System.Collections.Generic.HashSet[int]]::new()
-                            }
-                        }
-                        $ip = "$($conn.LocalAddress)".Trim()
-                        if ($ip) { $null = $PortMap[$p].Addresses.Add($ip) }
-                        if ($procId -gt 0) { $null = $PortMap[$p].PIDs.Add($procId) }
-                    }
-                }
-            }
-        } catch {
-            # Fallback handled below
-        }
-
-        # Strategy 2: netstat -ano fallback / supplement
-        try {
-            $netstatLines = cmd /c "netstat -ano" 2>$null
-            foreach ($line in $netstatLines) {
-                $str = $line.Trim()
-                if ($str -match '^\s*TCP\s+(\S+):(\d+)\s+\S+\s+LISTENING\s+(\d+)\s*$') {
-                    $ip = $matches[1]
-                    $p = [int]$matches[2]
-                    $procId = [int]$matches[3]
-
-                    if ($p -gt 0) {
-                        if (-not $PortMap.ContainsKey($p)) {
-                            $PortMap[$p] = [PSCustomObject]@{
-                                Port      = $p
-                                Addresses = [System.Collections.Generic.HashSet[string]]::new()
-                                PIDs      = [System.Collections.Generic.HashSet[int]]::new()
-                            }
-                        }
-                        if ($ip) { $null = $PortMap[$p].Addresses.Add($ip) }
-                        if ($procId -gt 0) { $null = $PortMap[$p].PIDs.Add($procId) }
-                    }
-                }
-            }
-        } catch {
-            # Ignore netstat errors
-        }
-
-        $sortedPorts = @($PortMap.Keys | Sort-Object)
         if ($sortedPorts.Count -eq 0) {
             Write-Host "`nNo active listening ports detected or insufficient permissions." -ForegroundColor Yellow
         } else {
-            $SkipProcesses = @("system", "onedrive", "antigravity")
-
             Write-Host ("`n{0,-7} {1,-18} {2,-24} {3}" -f "PORT", "PROCESS", "PID", "SERVICE / BOUND ADDRESS") -ForegroundColor DarkCyan
             Write-Host ("{0,-7} {1,-18} {2,-24} {3}" -f ("-" * 6), ("-" * 17), ("-" * 23), ("-" * 30)) -ForegroundColor DarkGray
 
             $displayedCount = 0
             foreach ($p in $sortedPorts) {
-                # Only show 4-digit ports (1000 - 9999)
-                if ($p -lt 1000 -or $p -gt 9999) { continue }
-
-                $info = $PortMap[$p]
+                $info = $activeMap[$p]
                 $pidList = @($info.PIDs)
                 $pidStr = if ($pidList.Count -gt 0) { $pidList -join ", " } else { "-" }
 
-                $procNames = @()
-                foreach ($procId in $pidList) {
-                    try {
-                        $proc = Get-Process -Id $procId -ErrorAction SilentlyContinue
-                        if ($proc -and $proc.Name) {
-                            if ($procNames -notcontains $proc.Name) { $procNames += $proc.Name }
-                        }
-                    } catch {
-                        # Ignore
-                    }
-                }
-
-                # Filter out skipped processes ('system', 'onedrive', 'antigravity')
-                $shouldSkip = $false
-                if ($procNames.Count -gt 0) {
-                    $matchedSkips = @($procNames | Where-Object {
-                        $name = $_.ToLower()
-                        $SkipProcesses | Where-Object { $name -like "*$_*" }
-                    })
-                    if ($matchedSkips.Count -eq $procNames.Count) {
-                        $shouldSkip = $true
-                    }
-                }
-                if ($shouldSkip) { continue }
-
-                # Filter out ports without a recognized service text label
-                $serviceDesc = if ($KnownServices.ContainsKey($p)) { $KnownServices[$p] } else { "" }
-                if ([string]::IsNullOrWhiteSpace($serviceDesc)) { continue }
-
-                $procDisplay = if ($procNames.Count -gt 0) { $procNames -join ", " } else { "Unknown" }
+                $procNames = $info.ProcessNames
+                $procDisplay = if ($procNames -and $procNames.Count -gt 0) { $procNames -join ", " } else { "Unknown" }
 
                 $addrList = @($info.Addresses)
                 $addrStr = if ($addrList.Count -gt 0) { $addrList -join ", " } else { "*" }
-                $detailStr = "$serviceDesc ($addrStr)"
+                $detailStr = "$($info.ServiceDesc) ($addrStr)"
 
                 $portColor = if ($p -in 8000, 8501, 5173, 5432, 6274, 11434) { "Green" } else { "White" }
 
