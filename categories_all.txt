@@ -1,0 +1,157 @@
+Resisting and Overcoming Sin	resisting-and-overcoming-sin	/configurations/categories/resisting-and-overcoming-sin/
+Obedience	obedience	/configurations/categories/obedience/
+Faith	faith	/configurations/categories/faith/
+Encouragement	encouragement	/configurations/categories/encouragement/
+Hope	hope	/configurations/categories/hope/
+Salvation	salvation	/configurations/categories/salvation/
+Gratitude	gratitude	/configurations/categories/gratitude/
+Trust	trust	/configurations/categories/trust/
+Joy	joy	/configurations/categories/joy/
+Peace	peace	/configurations/categories/peace/
+Forgiveness	forgiveness	/configurations/categories/forgiveness/
+Healing	healing	/configurations/categories/healing/
+Protection	protection	/configurations/categories/protection/
+Strength	strength	/configurations/categories/strength/
+Leadership	leadership	/configurations/categories/leadership/
+Integrity and Character	integrity-and-character	/configurations/categories/leadership/integrity-and-character/
+Servant Leadership Compassion	servant-leadership-compassion	/configurations/categories/leadership/servant-leadership-compassion/
+Management/Delegation	management-delegation	/configurations/categories/leadership/managementdelegation/
+Team Building	team-building	/configurations/categories/leadership/team-building/
+Setting Organizational Goals	setting-organizational-goals	/configurations/categories/leadership/setting-organizational-goals/
+Leading and Developing People	leading-and-developing-people	/configurations/categories/leadership/leading-and-developing-people/
+Marriage	marriage	/configurations/categories/marriage/
+Understanding Your Mate	understanding-your-mate	/configurations/categories/marriage/understanding-your-mate/
+Developing a Healthy Sex Life	developing-a-healthy-sex-life	/configurations/categories/marriage/developing-a-healthy-sex-life/
+Recovering After an Affair	recovering-after-an-affair	/configurations/categories/marriage/recovering-after-an-affair/
+Dealing With In-Laws	dealing-with-in-laws	/configurations/categories/marriage/dealing-with-in-laws/
+Developing Emotional Intimacy	developing-emotional-intimacy	/configurations/categories/marriage/developing-emotional-intimacy/
+Communication and Conflict	communication-and-conflict	/configurations/categories/marriage/communication-and-conflict/
+Creating Boundaries	creating-boundaries	/configurations/categories/marriage/creating-boundaries/
+Parenting	parenting	/configurations/categories/parenting/
+Orphans / Foster Care	orphans-foster-care	/configurations/categories/parenting/orphans-foster-care/
+Cultural Influences on Kids	cultural-influences-on-kids	/configurations/categories/parenting/cultural-influences-on-kids/
+Parenting Toddlers	parenting-toddlers	/configurations/categories/parenting/parenting-toddlers/
+Building a Child of Faith and Character	building-a-child-of-faith-and-character	/configurations/categories/parenting/building-a-child-of-faith-and-character/
+Parenting Teens	parenting-teens	/configurations/categories/parenting/parenting-teens/
+Encouraging Your Child	encouraging-your-child	/configurations/categories/parenting/encouraging-your-child/
+Sibling Rivalry	sibling-rivalry	/configurations/categories/parenting/sibling-rivalry/
+Loving Your Stepchildren	loving-your-stepchildren	/configurations/categories/parenting/loving-your-stepchildren/
+Women	women	/configurations/categories/women/
+Being a Great Mom	being-a-great-mom	/configurations/categories/women/being-a-great-mom/
+Developing Friendships	developing-friendships	/configurations/categories/women/developing-friendships/
+Developing Self-Esteem and Body Image	developing-self-esteem-and-body-image	/configurations/categories/women/developing-self-esteem-and-body-image/
+Building Better Relationships	building-better-relationships	/configurations/categories/women/building-better-relationships/
+Dealing With Conflict (1)	dealing-with-conflict-1	/configurations/categories/women/dealing-with-conflict-1/
+Health and Fitness (1)	health-and-fitness-1	/configurations/categories/women/health-and-fitness-1/
+Overcoming Time Management Problems	overcoming-time-management-problems	/configurations/categories/women/overcoming-time-management-problems/
+Strengthening Your Marriage	strengthening-your-marriage	/configurations/categories/women/strengthening-your-marriage/
+Becoming a Godly Woman	becoming-a-godly-woman	/configurations/categories/women/becoming-a-godly-woman/
+Purpose	purpose	/configurations/categories/purpose/
+Recognizing Your Gifts and Talents	recognizing-your-gifts-and-talents	/configurations/categories/purpose/recognizing-your-gifts-and-talents/
+Identifying Skills and Passions	identifying-skills-and-passions	/configurations/categories/purpose/identifying-skills-and-passions/
+Success to Significance	success-to-significance	/configurations/categories/purpose/success-to-significance/
+Overcoming Obstacles	overcoming-obstacles	/configurations/categories/purpose/overcoming-obstacles/
+Developing a Vision	developing-a-vision	/configurations/categories/purpose/developing-a-vision/
+Why Your Purpose is Important	why-your-purpose-is-important	/configurations/categories/purpose/why-your-purpose-is-important/
+What is Your Purpose	what-is-your-purpose	/configurations/categories/purpose/what-is-your-purpose/
+Bible	bible	/configurations/categories/bible/
+Old Testament	old-testament	/configurations/categories/bible/old-testament/
+The Life and Letters of Paul	the-life-and-letters-of-paul	/configurations/categories/bible/the-life-and-letters-of-paul/
+Apologetics	apologetics	/configurations/categories/bible/apologetics/
+The Life and Teachings of Jesus	the-life-and-teachings-of-jesus	/configurations/categories/bible/the-life-and-teachings-of-jesus/
+New Testament	new-testament	/configurations/categories/bible/new-testament/
+Theological Issues	theological-issues	/configurations/categories/bible/theological-issues/
+Topical Bible Study	topical-bible-study	/configurations/categories/bible/topical-bible-study/
+Life Challenges	life-challenges	/configurations/categories/life-challenges/
+Anger	anger	/configurations/categories/life-challenges/anger/
+Depression	depression	/configurations/categories/life-challenges/depression/
+Emotional Self-Control	emotional-self-control	/configurations/categories/life-challenges/emotional-self-control/
+Grief	grief	/configurations/categories/life-challenges/grief/
+Self Image	self-image	/configurations/categories/life-challenges/self-image/
+Addiction	addiction	/configurations/categories/life-challenges/addiction/
+Anxiety and Worry	anxiety-and-worry	/configurations/categories/life-challenges/anxiety-and-worry/
+Career	career	/configurations/categories/career/
+Finding a Career	finding-a-career	/configurations/categories/career/finding-a-career/
+Balancing Work and Life	balancing-work-and-life	/configurations/categories/career/balancing-work-and-life/
+Making Career Transitions	making-career-transitions	/configurations/categories/career/making-career-transitions/
+Understanding Your Career Personality Type	understanding-your-career-personality-type	/configurations/categories/career/understanding-your-career-personality-type/
+Dealing With Difficult People	dealing-with-difficult-people	/configurations/categories/career/dealing-with-difficult-people/
+Adoption & Foster Care	adoption-foster-care	/configurations/categories/adoption-foster-care/
+Health	health	/configurations/categories/adoption-foster-care/health/
+Identity	identity	/configurations/categories/adoption-foster-care/identity/
+Correcting	correcting	/configurations/categories/adoption-foster-care/correcting/
+Advocating	advocating	/configurations/categories/adoption-foster-care/advocating/
+Preparation	preparation	/configurations/categories/adoption-foster-care/preparation/
+Connecting	connecting	/configurations/categories/adoption-foster-care/connecting/
+Empowering	empowering	/configurations/categories/adoption-foster-care/empowering/
+Emerging Generation	emerging-generation	/configurations/categories/emerging-generation/
+Managing Your Money	managing-your-money	/configurations/categories/emerging-generation/managing-your-money/
+Fighting Social Injustice/Missions	fighting-social-injustice-missions	/configurations/categories/emerging-generation/fighting-social-injusticemissions/
+Developing Self-Esteem and Body Image (1)	developing-self-esteem-and-body-image-1	/configurations/categories/emerging-generation/developing-self-esteem-and-body-image-1/
+Overcoming Addictions	overcoming-addictions	/configurations/categories/emerging-generation/overcoming-addictions/
+Dating and Courtship (1)	dating-and-courtship-1	/configurations/categories/emerging-generation/dating-and-courtship-1/
+College	college	/configurations/categories/emerging-generation/college/
+Choosing a Career	choosing-a-career	/configurations/categories/emerging-generation/choosing-a-career/
+Developing Healthy Relationships	developing-healthy-relationships	/configurations/categories/emerging-generation/developing-healthy-relationships/
+Sex and Marriage	sex-and-marriage	/configurations/categories/emerging-generation/sex-and-marriage/
+Spiritual Growth	spiritual-growth	/configurations/categories/spiritual-growth/
+Growing In Holiness	growing-in-holiness	/configurations/categories/spiritual-growth/growing-in-holiness/
+Faith During Difficult Times	faith-during-difficult-times	/configurations/categories/spiritual-growth/faith-during-difficult-times/
+Spiritual Disciplines	spiritual-disciplines	/configurations/categories/spiritual-growth/spiritual-disciplines/
+Worship	worship	/configurations/categories/spiritual-growth/worship/
+Testimonies	testimonies	/configurations/categories/spiritual-growth/testimonies/
+Spiritual Gifts	spiritual-gifts	/configurations/categories/spiritual-growth/spiritual-gifts/
+How To Study The Bible	how-to-study-the-bible	/configurations/categories/spiritual-growth/how-to-study-the-bible/
+Money	money	/configurations/categories/money/
+Generosity	generosity	/configurations/categories/money/generosity/
+Investing	investing	/configurations/categories/money/investing/
+Budgeting	budgeting	/configurations/categories/money/budgeting/
+Saving	saving	/configurations/categories/money/saving/
+Tithing	tithing	/configurations/categories/money/tithing/
+Debt	debt	/configurations/categories/money/debt/
+Prayer	prayer	/configurations/categories/prayer/
+Hindrances to Effective Prayer	hindrances-to-effective-prayer	/configurations/categories/prayer/hindrances-to-effective-prayer/
+Learning about Prayer	learning-about-prayer	/configurations/categories/prayer/learning-about-prayer/
+Strengthening Your Prayer Life	strengthening-your-prayer-life	/configurations/categories/prayer/strengthening-your-prayer-life/
+Dealing with Unanswered Prayers	dealing-with-unanswered-prayers	/configurations/categories/prayer/dealing-with-unanswered-prayers/
+Praying Through Difficult Situations	praying-through-difficult-situations	/configurations/categories/prayer/praying-through-difficult-situations/
+Personal Productivity	personal-productivity	/configurations/categories/personal-productivity/
+Goal Setting	goal-setting	/configurations/categories/personal-productivity/goal-setting/
+Maximizing Your Strengths	maximizing-your-strengths	/configurations/categories/personal-productivity/maximizing-your-strengths/
+Time Management	time-management	/configurations/categories/personal-productivity/time-management/
+Prioritization	prioritization	/configurations/categories/personal-productivity/prioritization/
+Men	men	/configurations/categories/men/
+Health and Fitness	health-and-fitness	/configurations/categories/men/health-and-fitness/
+Leadership At Home	leadership-at-home	/configurations/categories/men/leadership-at-home/
+Balancing Work and Life (1)	balancing-work-and-life-1	/configurations/categories/men/balancing-work-and-life-1/
+Loving Your Wife	loving-your-wife	/configurations/categories/men/loving-your-wife/
+Being a Man of Integrity	being-a-man-of-integrity	/configurations/categories/men/being-a-man-of-integrity/
+Leadership in the Workplace	leadership-in-the-workplace	/configurations/categories/men/leadership-in-the-workplace/
+Being a Great Dad	being-a-great-dad	/configurations/categories/men/being-a-great-dad/
+Career/Unemployment	career-unemployment	/configurations/categories/men/careerunemployment/
+Servant Leadership	servant-leadership	/configurations/categories/men/servant-leadership/
+World View	world-view	/configurations/categories/world-view/
+Asia	asia	/configurations/categories/world-view/asia/
+Stewardship	stewardship	/configurations/categories/world-view/stewardship/
+Latin America - Caribbean	latin-america-caribbean	/configurations/categories/world-view/latin-america-caribbean/
+Africa	africa	/configurations/categories/world-view/africa/
+Fight Poverty	fight-poverty	/configurations/categories/world-view/fight-poverty/
+Advocacy	advocacy	/configurations/categories/world-view/advocacy/
+Middle East - Eastern Europe	middle-east-eastern-europe	/configurations/categories/world-view/middle-east-eastern-europe/
+Justice	justice	/configurations/categories/world-view/justice/
+Evangelism and Outreach	evangelism-and-outreach	/configurations/categories/evangelism-and-outreach/
+Service Projects	service-projects	/configurations/categories/evangelism-and-outreach/service-projects/
+Evangelism	evangelism	/configurations/categories/evangelism-and-outreach/evangelism/
+Missions	missions	/configurations/categories/evangelism-and-outreach/missions/
+Relationships	relationships	/configurations/categories/relationships/
+Loving Others	loving-others	/configurations/categories/relationships/loving-others/
+Understanding Personality Types	understanding-personality-types	/configurations/categories/relationships/understanding-personality-types/
+Divorce	divorce	/configurations/categories/relationships/divorce/
+Dating and Courtship	dating-and-courtship	/configurations/categories/relationships/dating-and-courtship/
+Dealing With Conflict	dealing-with-conflict	/configurations/categories/relationships/dealing-with-conflict/
+Singleness	singleness	/configurations/categories/relationships/singleness/
+Uncategorized	uncategorized	/configurations/categories/uncategorized/
+Children / Teens	children-teens	/configurations/categories/children-teens/
+Children	children	/configurations/categories/children-teens/children/
+Preschool	preschool	/configurations/categories/children-teens/preschool/
+Teens	teens	/configurations/categories/children-teens/teens/
