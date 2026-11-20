@@ -40,7 +40,10 @@ param(
     [string]$Path,
 
     [Parameter(Mandatory = $false)]
-    [switch]$KeepLockfile
+    [switch]$KeepLockfile,
+
+    [Parameter(Mandatory = $false)]
+    [string[]]$Exclude = @()
 )
 
 process {
@@ -62,6 +65,13 @@ process {
     $targets = @(
         Get-ChildItem -LiteralPath $resolved -Directory -Filter 'node_modules' -Recurse -Force -ErrorAction SilentlyContinue |
             Where-Object { -not ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) } |
+            Where-Object {
+                $skip = $false
+                foreach ($pat in $Exclude) {
+                    if ($_.FullName -match $pat) { $skip = $true; break }
+                }
+                -not $skip
+            } |
             Sort-Object -Property { $_.FullName.Length } -Descending
     )
 
@@ -92,7 +102,20 @@ process {
             Write-Verbose "Removed $($target.FullName)"
         }
         catch {
-            Write-Warning "Failed to remove '$($target.FullName)': $($_.Exception.Message)"
+            # PowerShell can fail on deeply-nested pnpm trees / junction points.
+            # Fall back to cmd's rd /s /q which handles those more forcefully.
+            try {
+                cmd /c "rd /s /q `"$($target.FullName)`"" 2>$null | Out-Null
+                if (-not (Test-Path -LiteralPath $target.FullName)) {
+                    $removed++
+                    $reclaimedBytes += $size
+                    Write-Verbose "Removed (via rd) $($target.FullName)"
+                } else {
+                    Write-Warning "Failed to remove '$($target.FullName)': $($_.Exception.Message)"
+                }
+            } catch {
+                Write-Warning "Failed to remove '$($target.FullName)': $($_.Exception.Message)"
+            }
         }
     }
 

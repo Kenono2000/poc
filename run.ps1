@@ -26,7 +26,7 @@
     .\poc\run.ps1 lint            # Run Abyssium Studio ESLint validation
     .\poc\run.ps1 ollama          # Run local Ollama AI session (deepseek-r1:8b)
     .\poc\run.ps1 activate        # Show Python venv activation command
-    .\poc\run.ps1 clean           # Safely prune node_modules and pycache (excludes .venv)
+    .\poc\run.ps1 clean           # Safely prune node_modules & pycache to clean c:\src and d:\src (excludes .venv)
     .\poc\run.ps1 ports           # Find and list all active listening ports and processes
     .\poc\run.ps1 stop-ports      # Shut down processes on active labeled 4-digit ports
     .\poc\run.ps1 setup           # Verify & install dependencies for Python and Node
@@ -221,7 +221,7 @@ $MenuItems = [ordered]@{
 
     "19" = @{ Action = "stop-ports";   Category = "Workspace Maintenance";          Desc = "Shut Down Active Processes from Option 5" }
     "20" = @{ Action = "activate";     Category = "Workspace Maintenance";          Desc = "Show Python venv Activation Command" }
-    "21" = @{ Action = "clean";        Category = "Workspace Maintenance";          Desc = "Safely Prune node_modules & pycache" }
+    "21" = @{ Action = "clean";        Category = "Workspace Maintenance";          Desc = "Safely Prune node_modules & pycache to clean c:\src and d:\src" }
     "22" = @{ Action = "setup";        Category = "Workspace Maintenance";          Desc = "Verify & Install Python/Node Dependencies" }
     "23" = @{ Action = "help";         Category = "Workspace Maintenance";          Desc = "Display Reference Guide & Help" }
 }
@@ -292,7 +292,7 @@ function Show-Help {
     Write-Host "`nWorkspace Maintenance:" -ForegroundColor Green
     Write-Host "  stop-ports, kill-ports Shut down active processes on labeled 4-digit ports (from option 5)"
     Write-Host "  activate           Show Python venv activation command"
-    Write-Host "  clean              Safely purge node_modules and pycache (excludes .venv)"
+    Write-Host "  clean              Safely prune node_modules & pycache to clean c:\src and d:\src (excludes .venv)"
     Write-Host "  setup              Verify & install dependencies for Python and Node projects"
     Write-Host "  help, ?            Display this reference guide`n"
 }
@@ -831,46 +831,63 @@ function Invoke-WorkspaceAction {
     "clean" {
         Show-Header "Cleaning Workspace Artifacts" "Yellow"
 
+        # Determine cleanup targets: the workspace root (d:\src) and c:\src (if it exists and differs).
+        $CleanRoots = @($WorkspaceRoot)
+        $Csrc = "c:\src"
+        if ((Test-Path $Csrc) -and ($Csrc -ne $WorkspaceRoot)) {
+            $CleanRoots += $Csrc
+        }
+
         # 1. node_modules removal via poc script or fallback
         $removeNodeScript = Join-Path $ScriptDir "script\ps\_remove-node-modules.ps1"
         if (-not (Test-Path $removeNodeScript)) {
             $removeNodeScript = Join-Path $WorkspaceRoot "poc\script\ps\_remove-node-modules.ps1"
         }
-        if (Test-Path $removeNodeScript) {
-            Write-Host "Purging node_modules using $removeNodeScript..." -ForegroundColor Yellow
-            & $removeNodeScript -Path $WorkspaceRoot -Confirm:$false
-        } else {
-            Write-Host "Pruning node_modules directories..." -ForegroundColor Yellow
-            Get-ChildItem -Path $WorkspaceRoot -Recurse -Directory -Filter "node_modules" -ErrorAction SilentlyContinue |
+
+        foreach ($root in $CleanRoots) {
+            Write-Host "`nCleaning node_modules under $root..." -ForegroundColor Yellow
+            if (Test-Path $removeNodeScript) {
+                & $removeNodeScript -Path $root -Confirm:$false -Exclude '\\\.venv\\'
+            } else {
+                Write-Host "Pruning node_modules directories..." -ForegroundColor Yellow
+                Get-ChildItem -Path $root -Recurse -Directory -Filter "node_modules" -ErrorAction SilentlyContinue |
+                    Where-Object { $_.FullName -notmatch '\\\.venv\\' } |
+                    ForEach-Object {
+                        Write-Host "Removing $($_.FullName)..." -ForegroundColor DarkGray
+                        Remove-Item -Path $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
+                    }
+            }
+        }
+
+        # 2. Python __pycache__ (strictly preserving .venv)
+        foreach ($root in $CleanRoots) {
+            Write-Host "`nPurging __pycache__ under $root (excluding .venv)..." -ForegroundColor Yellow
+            Get-ChildItem -Path $root -Recurse -Directory -Filter "__pycache__" -ErrorAction SilentlyContinue |
+                Where-Object { $_.FullName -notmatch '\\\.venv\\' } |
                 ForEach-Object {
                     Write-Host "Removing $($_.FullName)..." -ForegroundColor DarkGray
                     Remove-Item -Path $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
                 }
         }
 
-        # 2. Python __pycache__ (strictly preserving .venv)
-        Write-Host "Purging __pycache__ (excluding .venv)..." -ForegroundColor Yellow
-        Get-ChildItem -Path $WorkspaceRoot -Recurse -Directory -Filter "__pycache__" -ErrorAction SilentlyContinue |
-            Where-Object { $_.FullName -notmatch '\\\.venv\\' } |
-            ForEach-Object {
-                Write-Host "Removing $($_.FullName)..." -ForegroundColor DarkGray
-                Remove-Item -Path $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
-            }
-
         # 3. Pytest cache (strictly preserving .venv)
-        Write-Host "Purging .pytest_cache (excluding .venv)..." -ForegroundColor Yellow
-        Get-ChildItem -Path $WorkspaceRoot -Recurse -Directory -Filter ".pytest_cache" -ErrorAction SilentlyContinue |
-            Where-Object { $_.FullName -notmatch '\\\.venv\\' } |
-            ForEach-Object {
-                Write-Host "Removing $($_.FullName)..." -ForegroundColor DarkGray
-                Remove-Item -Path $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
-            }
+        foreach ($root in $CleanRoots) {
+            Write-Host "`nPurging .pytest_cache under $root (excluding .venv)..." -ForegroundColor Yellow
+            Get-ChildItem -Path $root -Recurse -Directory -Filter ".pytest_cache" -ErrorAction SilentlyContinue |
+                Where-Object { $_.FullName -notmatch '\\\.venv\\' } |
+                ForEach-Object {
+                    Write-Host "Removing $($_.FullName)..." -ForegroundColor DarkGray
+                    Remove-Item -Path $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
+                }
+        }
 
         # 4. Vite dist output
-        $studioDist = Join-Path $WorkspaceRoot "abyssium-studio\dist"
-        if (Test-Path $studioDist) {
-            Write-Host "Removing $studioDist..." -ForegroundColor Yellow
-            Remove-Item -Path $studioDist -Recurse -Force -ErrorAction SilentlyContinue
+        foreach ($root in $CleanRoots) {
+            $studioDist = Join-Path $root "abyssium-studio\dist"
+            if (Test-Path $studioDist) {
+                Write-Host "`nRemoving $studioDist..." -ForegroundColor Yellow
+                Remove-Item -Path $studioDist -Recurse -Force -ErrorAction SilentlyContinue
+            }
         }
 
         Write-Host "`nWorkspace cleanup complete!" -ForegroundColor Green

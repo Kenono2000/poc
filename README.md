@@ -149,7 +149,7 @@ then dispatches one of the actions below.
 | 12 | `lint` | Abyssium Studio | `npm run lint` |
 | 13 | `ollama` | Local AI | `ollama run deepseek-r1:8b --verbose` |
 | 14 | `activate` | Maintenance | Prints the exact `.venv` activation command |
-| 15 | `clean` | Maintenance | Purges `node_modules`, `__pycache__`, `.pytest_cache`, Vite `dist` — **never** `.venv` |
+| 15 | `clean` | Maintenance | Purges `node_modules`, `__pycache__`, `.pytest_cache`, Vite `dist` in c:\src and d:\src — **never** `.venv` |
 | 16 | `setup` | Maintenance | Creates `.venv` if missing, upgrades pip, installs `requirements.txt`, `npm install` for Abyssium Studio |
 | 17 | `help` | Maintenance | Formatted command reference |
 
