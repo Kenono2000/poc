@@ -204,26 +204,23 @@ $MenuItems = [ordered]@{
     "5"  = @{ Action = "ports";        Category = "Workspace Diagnostics & Health"; Desc = "Find and Display Active Labeled 4-Digit Ports" }
     "6"  = @{ Action = "healthz";      Category = "Workspace Diagnostics & Health"; Desc = "Run Automated Health Check on Running Services" }
 
-    "7"  = @{ Action = "api";          Category = "Enterprise RAG Stack";           Desc = "Start FastAPI Backend (uvicorn on :8000)" }
+    "7"  = @{ Action = "studio";       Category = "Abyssium Studio";                Desc = "Start Vite Dev Server (:5173)" }
+
     "8"  = @{ Action = "ui";           Category = "Enterprise RAG Stack";           Desc = "Start Streamlit UI (streamlit on :8501)" }
-    "9"  = @{ Action = "mcp";          Category = "Enterprise RAG Stack";           Desc = "Start FastMCP Gateway (python -m app.mcp)" }
+    "9"  = @{ Action = "api";          Category = "Enterprise RAG Stack";           Desc = "Start FastAPI Backend (uvicorn on :8000)" }
     "10" = @{ Action = "mcp-ui";       Category = "Enterprise RAG Stack";           Desc = "Start FastMCP Inspector / Evaluate UI (Local Testing)" }
-    "11" = @{ Action = "test";         Category = "Enterprise RAG Stack";           Desc = "Run Pytest Suite (130 offline tests)" }
-    "12" = @{ Action = "ingest";       Category = "Enterprise RAG Stack";           Desc = "Run Document Ingestion Pipeline" }
-    "13" = @{ Action = "docker-up";    Category = "Enterprise RAG Stack";           Desc = "Start Postgres 16 (pgvector) + Jaeger" }
-    "14" = @{ Action = "docker-down";  Category = "Enterprise RAG Stack";           Desc = "Stop Docker Compose Services" }
+    "11" = @{ Action = "mcp";          Category = "Enterprise RAG Stack";           Desc = "Start FastMCP Gateway (python -m app.mcp)" }
+    "12" = @{ Action = "test";         Category = "Enterprise RAG Stack";           Desc = "Run Pytest Suite (130 offline tests)" }
+    "13" = @{ Action = "ingest";       Category = "Enterprise RAG Stack";           Desc = "Run Document Ingestion Pipeline" }
+    "14" = @{ Action = "docker-up";    Category = "Enterprise RAG Stack";           Desc = "Start Postgres 16 (pgvector) + Jaeger" }
+    "15" = @{ Action = "docker-down";  Category = "Enterprise RAG Stack";           Desc = "Stop Docker Compose Services" }
 
-    "15" = @{ Action = "studio";       Category = "Abyssium Studio";                Desc = "Start Vite Dev Server (:5173)" }
-    "16" = @{ Action = "build";        Category = "Abyssium Studio";                Desc = "Build Production Bundle (Vite)" }
-    "17" = @{ Action = "lint";         Category = "Abyssium Studio";                Desc = "Run ESLint Validation" }
-
-    "18" = @{ Action = "ollama";       Category = "Ollama Local AI";                Desc = "Run Local DeepSeek Model (deepseek-r1:8b)" }
-
-    "19" = @{ Action = "stop-ports";   Category = "Workspace Maintenance";          Desc = "Shut Down Active Processes from Option 5" }
-    "20" = @{ Action = "activate";     Category = "Workspace Maintenance";          Desc = "Show Python venv Activation Command" }
-    "21" = @{ Action = "clean";        Category = "Workspace Maintenance";          Desc = "Safely Prune node_modules & pycache to clean c:\src and d:\src" }
-    "22" = @{ Action = "setup";        Category = "Workspace Maintenance";          Desc = "Verify & Install Python/Node Dependencies" }
-    "23" = @{ Action = "help";         Category = "Workspace Maintenance";          Desc = "Display Reference Guide & Help" }
+    "16" = @{ Action = "stop-ports";   Category = "Workspace Maintenance";          Desc = "Shut Down Active Processes from Option 5" }
+    "17" = @{ Action = "activate";     Category = "Workspace Maintenance";          Desc = "Show Python venv Activation Command" }
+    "18" = @{ Action = "clean";        Category = "Workspace Maintenance";          Desc = "Safely Prune node_modules & pycache to clean c:\src and d:\src" }
+    "19" = @{ Action = "credits";    Category = "Workspace Maintenance";          Desc = "Check API Credit Balances for OpenAI, Gemini & OpenRouter" }
+    "20" = @{ Action = "setup";        Category = "Workspace Maintenance";          Desc = "Verify & Install Python/Node Dependencies" }
+    "21" = @{ Action = "help";         Category = "Workspace Maintenance";          Desc = "Display Reference Guide & Help" }
 }
 
 function Show-Header {
@@ -294,6 +291,7 @@ function Show-Help {
     Write-Host "  activate           Show Python venv activation command"
     Write-Host "  clean              Safely prune node_modules & pycache to clean c:\src and d:\src (excludes .venv)"
     Write-Host "  setup              Verify & install dependencies for Python and Node projects"
+    Write-Host "  credits            Check API credit balances for OpenAI, Gemini, and OpenRouter"
     Write-Host "  help, ?            Display this reference guide`n"
 }
 
@@ -996,6 +994,87 @@ function Invoke-WorkspaceAction {
 
             Write-Host "`nTotal active ports listed: $displayedCount (labeled 4-digit ports only; filtered out: 'system', 'onedrive', 'antigravity')" -ForegroundColor Green
         }
+        Write-Host ""
+    }
+
+    # -------------------------------------------------------------
+    # API Credit Balance Checker
+    # -------------------------------------------------------------
+    { $_ -in "credits", "balance", "billing" } {
+        Show-Header "API Credit & Balance Summary (OpenAI, Gemini, OpenRouter)" "Cyan"
+        
+        # Load .env if present
+        $envPath = Join-Path $WorkspaceRoot ".env"
+        if (-not (Test-Path $envPath)) {
+            $envPath = Join-Path $ScriptDir ".env"
+        }
+        if (Test-Path $envPath) {
+            Get-Content $envPath | ForEach-Object {
+                if ($_ -match '^\s*([^#\s][^=]*?)\s*=\s*(.*)\s*$') {
+                    [Environment]::SetEnvironmentVariable($matches[1], $matches[2], 'Process')
+                }
+            }
+        }
+
+        Write-Host "Checking API credit balances and endpoint status...`n" -ForegroundColor DarkGray
+
+        # 1. OpenRouter Credits
+        if ($env:OPENROUTER_API_KEY) {
+            try {
+                $headers = @{ "Authorization" = "Bearer $($env:OPENROUTER_API_KEY)" }
+                $res = Invoke-RestMethod -Uri "https://openrouter.ai/api/v1/credits" -Headers $headers -TimeoutSec 10 -ErrorAction Stop
+                $total = $res.data.total_credits
+                $usage = $res.data.total_usage
+                $balance = $total - $usage
+                Write-Host "  * OpenRouter  : " -NoNewline
+                Write-Host "SUCCESS" -ForegroundColor Green -NoNewline
+                Write-Host " | Remaining: `$$balance (Total: `$$total, Used: `$$usage)" -ForegroundColor White
+                Write-Host "                  Dashboard: https://openrouter.ai/settings/credits" -ForegroundColor DarkGray
+            } catch {
+                Write-Host "  * OpenRouter  : " -NoNewline
+                Write-Host "FAILED" -ForegroundColor Red -NoNewline
+                Write-Host " ($($_))" -ForegroundColor DarkGray
+            }
+        } else {
+            Write-Host "  * OpenRouter  : [SKIPPED] OPENROUTER_API_KEY not found in environment." -ForegroundColor Yellow
+        }
+
+        # 2. OpenAI Key Status & Billing reference
+        if ($env:OPENAI_API_KEY) {
+            try {
+                $headers = @{ "Authorization" = "Bearer $($env:OPENAI_API_KEY)" }
+                $res = Invoke-RestMethod -Uri "https://api.openai.com/v1/models" -Headers $headers -TimeoutSec 10 -ErrorAction Stop
+                Write-Host "  * OpenAI      : " -NoNewline
+                Write-Host "ACTIVE" -ForegroundColor Green -NoNewline
+                Write-Host " ($( $res.data.Count ) models available)" -ForegroundColor White
+                Write-Host "                  Billing / Credits Overview: https://platform.openai.com/settings/organization/billing/overview" -ForegroundColor DarkGray
+            } catch {
+                Write-Host "  * OpenAI      : " -NoNewline
+                Write-Host "FAILED" -ForegroundColor Red -NoNewline
+                Write-Host " ($($_))" -ForegroundColor DarkGray
+            }
+        } else {
+            Write-Host "  * OpenAI      : [SKIPPED] OPENAI_API_KEY not found in environment." -ForegroundColor Yellow
+        }
+
+        # 3. Gemini / Google AI Studio Key Status & Billing reference
+        if ($env:GOOGLE_API_KEY) {
+            try {
+                $uri = "https://generativelanguage.googleapis.com/v1beta/models?key=$($env:GOOGLE_API_KEY)"
+                $res = Invoke-RestMethod -Uri $uri -Method Get -TimeoutSec 10 -ErrorAction Stop
+                Write-Host "  * Gemini      : " -NoNewline
+                Write-Host "ACTIVE" -ForegroundColor Green -NoNewline
+                Write-Host " ($( $res.models.Count ) models available)" -ForegroundColor White
+                Write-Host "                  Billing & Pricing: https://aistudio.google.com/billing?billing=01D53A-B8503A-AFFCEC" -ForegroundColor DarkGray
+            } catch {
+                Write-Host "  * Gemini      : " -NoNewline
+                Write-Host "FAILED" -ForegroundColor Red -NoNewline
+                Write-Host " ($($_))" -ForegroundColor DarkGray
+            }
+        } else {
+            Write-Host "  * Gemini      : [SKIPPED] GOOGLE_API_KEY not found in environment." -ForegroundColor Yellow
+        }
+
         Write-Host ""
     }
 
