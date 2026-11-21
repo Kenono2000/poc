@@ -328,10 +328,20 @@ function Start-MenuLoop {
         } catch {
             break
         }
-        if ($resume -and ($resume.Trim().ToLower() -in "q", "quit", "exit")) {
+        $resume = $resume.Trim()
+        if ([string]::IsNullOrWhiteSpace($resume)) { continue }
+        if ($resume.ToLower() -in "q", "quit", "exit") {
             Write-Host "`nExiting Workspace Orchestrator. Goodbye!" -ForegroundColor Cyan
             break
         }
+        # A direct command/option typed at the resume prompt is treated as the next
+        # selection instead of being discarded, so it does not have to be entered twice.
+        if ($MenuItems.Contains($resume)) {
+            $chosenAction = $MenuItems[$resume].Action
+        } else {
+            $chosenAction = $resume
+        }
+        Invoke-WorkspaceAction -TargetAction $chosenAction -Arguments @()
     }
 }
 
