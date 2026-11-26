@@ -195,15 +195,16 @@ Import it either as an installed package (`pip install -e libs/py`) or by prepen
 | `load_config(env_path=None)` | Finds the nearest `.env`, requires `OPENAI_API_KEY` + `DATABASE_URL` |
 | `get_documents(file_paths)` | Loads `.pdf` (PyPDF) and `.md` (UnstructuredMarkdown) |
 | `split_chunks(documents, chunk_size=2000, chunk_overlap=200)` | `RecursiveCharacterTextSplitter` chunking |
-| `get_embedding_model(api_key)` | `OpenAIEmbeddings("text-embedding-3-large", dimensions=1536)` |
+| `get_embedding_model(api_key, model="text-embedding-3-large", dimensions=1536)` | `OpenAIEmbeddings` with server-side Matryoshka dimension truncation |
 | `get_llm(api_key, model="gpt-4o", temperature=0.0)` | `ChatOpenAI` factory |
 | `get_db_connection(database_url, timeout=30)` | psycopg2 connection with `connect_timeout` |
+| `get_db_pool(database_url, min_size=1, max_size=10, max_idle=300.0, max_lifetime=3600.0, timeout=30.0)` | `psycopg_pool.ConnectionPool` with idle/lifetime recycling (requires `pip install -e "libs/py[pool]"`) |
 | `get_ollama_host` / `get_timeout_seconds` / `get_retry_attempts` | Env/CLI parsers for Ollama scripts |
 | `log_error(stage, error)` | Structured stage + traceback logger |
-| `safe_calculate(expression)` | AST-only math evaluator (`+ - * / **`, unary minus, parentheses) — no `eval` |
+| `safe_calculate(expression)` | AST-only math evaluator (`+ - * / **`, unary minus, parentheses, `OverflowError` guard) — no `eval` |
 | `remove_comments_and_docstrings(filepath)` | Strips docstrings and `#` / `--` comments while keeping valid code lines |
 
-`setup.py` packages this module as `py-libraries` v0.1.0.
+`setup.py` packages this module as `py-libraries` v0.1.0 with optional `pool` extra (`psycopg[pool]`). `.gitignore` excludes secrets including `.env`, `credentials.json`, `service_account.json`, and `token.json`.
 
 ---
 

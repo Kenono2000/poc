@@ -8,6 +8,7 @@ desktop.ini
 .env.local
 .envrc
 credentials.json
+service_account.json
 token.json
 .venv/
 env/

@@ -14,4 +14,7 @@ setup(
         "langchain-openai",
         "langchain-text-splitters",
     ],
+    extras_require={
+        "pool": ["psycopg[pool]"],
+    },
 )

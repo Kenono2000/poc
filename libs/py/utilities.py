@@ -1,6 +1,7 @@
 __all__ = [
     "expand_user_roles",
     "get_db_connection",
+    "get_db_pool",
     "get_documents",
     "get_embedding_model",
     "get_llm",
@@ -114,11 +115,16 @@ def split_chunks(
     print(f"✂️ Created {len(chunks)} text chunks.")
     return chunks
 
-def get_embedding_model(api_key: str) -> OpenAIEmbeddings:
+def get_embedding_model(
+    api_key: str,
+    model: str = "text-embedding-3-large",
+    dimensions: int = 1536,
+) -> OpenAIEmbeddings:
+    """Return an OpenAIEmbeddings client with server-side Matryoshka dimension truncation."""
     return OpenAIEmbeddings(
-        model="text-embedding-3-large",
-        dimensions=1536,
-        openai_api_key=api_key
+        model=model,
+        dimensions=dimensions,
+        openai_api_key=api_key,
     )
 
 def get_llm(api_key: str, model: str = "gpt-4o", temperature: float = 0.0) -> ChatOpenAI:
@@ -126,6 +132,30 @@ def get_llm(api_key: str, model: str = "gpt-4o", temperature: float = 0.0) -> Ch
 
 def get_db_connection(database_url: str, timeout: int = 30):
     return psycopg2.connect(database_url, connect_timeout=timeout)
+
+def get_db_pool(
+    database_url: str,
+    min_size: int = 1,
+    max_size: int = 10,
+    max_idle: float = 300.0,
+    max_lifetime: float = 3600.0,
+    timeout: float = 30.0,
+):
+    """Create a psycopg3 ConnectionPool with idle/lifetime recycling and health checks."""
+    try:
+        from psycopg_pool import ConnectionPool
+    except ImportError as exc:
+        raise ImportError(
+            "psycopg_pool is required for get_db_pool(). Install with: pip install 'psycopg[pool]'"
+        ) from exc
+    return ConnectionPool(
+        conninfo=database_url,
+        min_size=min_size,
+        max_size=max_size,
+        max_idle=max_idle,
+        max_lifetime=max_lifetime,
+        timeout=timeout,
+    )
 
 # --- Ollama utilities (extracted from py-scripts/ollama-models.py) ---------
 
@@ -186,7 +216,7 @@ def safe_calculate(expression: str) -> str:
                     raise ValueError(f"Unsupported expression: {ast.dump(node)}")
         result = _eval(tree.body)
         return str(result)
-    except (ValueError, ZeroDivisionError, SyntaxError) as e:
+    except (ValueError, ZeroDivisionError, SyntaxError, OverflowError) as e:
         return f"Error evaluating expression: {e}"
 
 def remove_comments_and_docstrings(filepath: str) -> None:
