@@ -515,7 +515,7 @@ function Invoke-WorkspaceAction {
         Write-Host "URL: http://localhost:8501`n" -ForegroundColor Cyan
         Push-Location "$WorkspaceRoot\enterprise-rag-pgvector-rbac"
         try {
-            & $PythonCmd -m streamlit run streamlit_app.py --server.port 8501 --server.headless true @ExtraArgs
+            & $PythonCmd -m streamlit run streamlit_app.py --server.port 8501 --server.headless true --server.runOnSave true @ExtraArgs
         } finally {
             Pop-Location
         }
@@ -525,7 +525,7 @@ function Invoke-WorkspaceAction {
         Show-Header "Starting FastMCP Gateway" "Green"
         Push-Location "$WorkspaceRoot\enterprise-rag-pgvector-rbac"
         try {
-            & $PythonCmd -m app.mcp @ExtraArgs
+            & $PythonCmd -m watchfiles "$PythonCmd -m app.mcp $ExtraArgs" app/mcp
         } finally {
             Pop-Location
         }
@@ -665,17 +665,17 @@ function Invoke-WorkspaceAction {
 
         $scriptPath = Join-Path $ScriptDir "run.ps1"
 
-        Start-Job -Name "RAG-API"     -ScriptBlock { & "$using:scriptPath" api }     | Out-Null
-        Start-Job -Name "RAG-WebApp"  -ScriptBlock { & "$using:scriptPath" ui }       | Out-Null
-        Start-Job -Name "MCP-UI"      -ScriptBlock { & "$using:scriptPath" mcp-ui }   | Out-Null
-        Start-Job -Name "Abyssium"    -ScriptBlock { & "$using:scriptPath" studio }   | Out-Null
+        Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", "& '$scriptPath' api"
+        Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", "& '$scriptPath' ui"
+        Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", "& '$scriptPath' mcp-ui"
+        Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", "& '$scriptPath' studio"
 
-        Write-Host "All four services launched in background PowerShell jobs." -ForegroundColor Green
+        Write-Host "All four services launched in separate console windows." -ForegroundColor Green
         Write-Host "  API:        http://localhost:8000" -ForegroundColor Cyan
         Write-Host "  Web App:    http://localhost:8501" -ForegroundColor Cyan
         Write-Host "  MCP UI:     FastMCP Inspector" -ForegroundColor Cyan
         Write-Host "  Studio:     http://localhost:5173" -ForegroundColor Cyan
-        Write-Host "`nMonitor jobs: Get-Job  |  View output: Receive-Job -Name <jobName>  |  Stop jobs: Stop-Job -Name <jobName>" -ForegroundColor DarkGray
+        Write-Host "`nStop all services: .\run.ps1 stop-all" -ForegroundColor DarkGray
     }
 
     # -------------------------------------------------------------
