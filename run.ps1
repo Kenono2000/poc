@@ -935,28 +935,40 @@ function Invoke-WorkspaceAction {
                 Write-Host "  * Port $port : No active process found." -ForegroundColor DarkGray
             } else {
                 foreach ($procId in $pidsToKill) {
-                    $procName = "PID $procId"
+                    $targetPid = $procId
                     try {
-                        $proc = Get-Process -Id $procId -ErrorAction SilentlyContinue
-                        if ($proc -and $proc.Name) { $procName = "$($proc.Name) (PID $procId)" }
+                        $cimProc = Get-CimInstance Win32_Process -Filter "ProcessId = $procId" -ErrorAction SilentlyContinue
+                        if ($cimProc -and $cimProc.ParentProcessId) {
+                            $parentProc = Get-CimInstance Win32_Process -Filter "ProcessId = $($cimProc.ParentProcessId)" -ErrorAction SilentlyContinue
+                            if ($parentProc -and $parentProc.CommandLine -match 'uvicorn|watchfiles|fastmcp|streamlit') {
+                                $targetPid = $parentProc.ProcessId
+                            }
+                        }
+                    } catch {
+                        # Ignore CIM lookup errors
+                    }
+
+                    $procName = "PID $targetPid"
+                    try {
+                        $proc = Get-Process -Id $targetPid -ErrorAction SilentlyContinue
+                        if ($proc -and $proc.Name) { $procName = "$($proc.Name) (PID $targetPid)" }
                     } catch {
                         # Ignore
                     }
 
                     Write-Host "  * Terminating $procName on port $port ($serviceDesc)..." -ForegroundColor Yellow
-                    try {
-                        Stop-Process -Id $procId -Force -ErrorAction Stop
-                        Write-Host "    [SUCCESS] Process $procId terminated." -ForegroundColor Green
+                    cmd /c "taskkill /F /T /PID $targetPid" 2>$null | Out-Null
+                    $rem = Get-Process -Id $targetPid -ErrorAction SilentlyContinue
+                    if ($null -eq $rem) {
+                        Write-Host "    [SUCCESS] Process tree $targetPid terminated." -ForegroundColor Green
                         $killedCount++
-                    } catch {
-                        # Fallback to taskkill /F /PID
-                        cmd /c "taskkill /F /PID $procId" 2>$null | Out-Null
-                        $rem = Get-Process -Id $procId -ErrorAction SilentlyContinue
-                        if ($null -eq $rem) {
-                            Write-Host "    [SUCCESS] Process $procId terminated via taskkill." -ForegroundColor Green
+                    } else {
+                        try {
+                            Stop-Process -Id $targetPid -Force -ErrorAction Stop
+                            Write-Host "    [SUCCESS] Process $targetPid terminated." -ForegroundColor Green
                             $killedCount++
-                        } else {
-                            Write-Host "    [WARNING] Failed to terminate PID $procId : $($_.Exception.Message)" -ForegroundColor Red
+                        } catch {
+                            Write-Host "    [WARNING] Failed to terminate PID $targetPid : $($_.Exception.Message)" -ForegroundColor Red
                         }
                     }
                 }
