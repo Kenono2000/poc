@@ -515,7 +515,7 @@ function Invoke-WorkspaceAction {
         Write-Host "URL: http://localhost:8501`n" -ForegroundColor Cyan
         Push-Location "$WorkspaceRoot\enterprise-rag-pgvector-rbac"
         try {
-            & $PythonCmd -m streamlit run streamlit_app.py --server.port 8501 @ExtraArgs
+            & $PythonCmd -m streamlit run streamlit_app.py --server.port 8501 --server.headless true @ExtraArgs
         } finally {
             Pop-Location
         }
@@ -536,6 +536,8 @@ function Invoke-WorkspaceAction {
         Write-Host "Interactive UI for testing and evaluating FastMCP tools, schemas, and RBAC policies." -ForegroundColor Cyan
         Write-Host "Server Target: SDLC-Harness-Gateway (app/mcp/gateway.py:mcp)`n" -ForegroundColor DarkGray
         Push-Location "$WorkspaceRoot\enterprise-rag-pgvector-rbac"
+        $prevAutoOpen = $env:MCP_AUTO_OPEN_ENABLED
+        $env:MCP_AUTO_OPEN_ENABLED = "false"
         try {
             if (Test-Path $VenvFastMcp) {
                 & $VenvFastMcp dev inspector app/mcp/gateway.py:mcp @ExtraArgs
@@ -545,6 +547,11 @@ function Invoke-WorkspaceAction {
                 npx -y @modelcontextprotocol/inspector $PythonCmd -m app.mcp @ExtraArgs
             }
         } finally {
+            if ($null -eq $prevAutoOpen) {
+                Remove-Item Env:MCP_AUTO_OPEN_ENABLED -ErrorAction SilentlyContinue
+            } else {
+                $env:MCP_AUTO_OPEN_ENABLED = $prevAutoOpen
+            }
             Pop-Location
         }
     }
