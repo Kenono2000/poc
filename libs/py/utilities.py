@@ -46,6 +46,10 @@ _SAFE_OPERATORS = {
     ast.USub: operator.neg,
 }
 
+_MAX_EXPR_LENGTH = 200
+_MAX_POW_BASE = 10_000
+_MAX_POW_EXP = 1_000
+
 _DOCSTRING_PATTERN = re.compile(r'"""[\s\S]*?"""')
 
 def expand_user_roles(raw_roles: list[str]) -> list[str]:
@@ -119,19 +123,39 @@ def get_embedding_model(
     api_key: str,
     model: str = "text-embedding-3-large",
     dimensions: int = 1536,
+    timeout: float = 30.0,
+    max_retries: int = 2,
 ) -> OpenAIEmbeddings:
-    """Return an OpenAIEmbeddings client with server-side Matryoshka dimension truncation."""
+    """Return an OpenAIEmbeddings client with Matryoshka dimension truncation."""
     return OpenAIEmbeddings(
         model=model,
         dimensions=dimensions,
         openai_api_key=api_key,
+        timeout=timeout,
+        max_retries=max_retries,
     )
 
-def get_llm(api_key: str, model: str = "gpt-4o", temperature: float = 0.0) -> ChatOpenAI:
-    return ChatOpenAI(model=model, temperature=temperature, openai_api_key=api_key)
+
+def get_llm(
+    api_key: str,
+    model: str = "gpt-4o",
+    temperature: float = 0.0,
+    timeout: float = 30.0,
+    max_retries: int = 1,
+) -> ChatOpenAI:
+    """Return a ChatOpenAI client with explicit timeout and retry bounds."""
+    return ChatOpenAI(
+        model=model,
+        temperature=temperature,
+        openai_api_key=api_key,
+        timeout=timeout,
+        max_retries=max_retries,
+    )
+
 
 def get_db_connection(database_url: str, timeout: int = 30):
     return psycopg2.connect(database_url, connect_timeout=timeout)
+
 
 def get_db_pool(
     database_url: str,
@@ -141,12 +165,13 @@ def get_db_pool(
     max_lifetime: float = 3600.0,
     timeout: float = 30.0,
 ):
-    """Create a psycopg3 ConnectionPool with idle/lifetime recycling and health checks."""
+    """Create a psycopg3 ConnectionPool with recycling and liveness checks."""
     try:
         from psycopg_pool import ConnectionPool
     except ImportError as exc:
         raise ImportError(
-            "psycopg_pool is required for get_db_pool(). Install with: pip install 'psycopg[pool]'"
+            "psycopg_pool is required for get_db_pool(). "
+            "Install with: pip install 'psycopg[pool]'"
         ) from exc
     return ConnectionPool(
         conninfo=database_url,
@@ -155,12 +180,13 @@ def get_db_pool(
         max_idle=max_idle,
         max_lifetime=max_lifetime,
         timeout=timeout,
+        check=ConnectionPool.check_connection,
     )
 
 # --- Ollama utilities (extracted from py-scripts/ollama-models.py) ---------
 
 def get_ollama_host(cli_host: str | None = None) -> str:
-    """Return the Ollama host, preferring a CLI override, then the environment, then localhost."""
+    """Return Ollama host, preferring CLI override, then env, then localhost."""
     host = cli_host or os.getenv("OLLAMA_HOST", "http://localhost:11434")
     return host.rstrip('/')
 
@@ -174,7 +200,10 @@ def get_timeout_seconds(default: int = 60) -> int:
             raise ValueError("timeout must be positive")
         return timeout
     except (TypeError, ValueError):
-        print(f"[WARN] Invalid OLLAMA_TIMEOUT_SECONDS='{raw_value}'. Using default {default} seconds.")
+        print(
+            f"[WARN] Invalid OLLAMA_TIMEOUT_SECONDS='{raw_value}'. "
+            f"Using default {default} seconds."
+        )
         return default
 
 
@@ -187,7 +216,10 @@ def get_retry_attempts(default: int = 1) -> int:
             raise ValueError("retry attempts must be positive")
         return attempts
     except (TypeError, ValueError):
-        print(f"[WARN] Invalid OLLAMA_RETRY_ATTEMPTS='{raw_value}'. Using default {default} attempt.")
+        print(
+            f"[WARN] Invalid OLLAMA_RETRY_ATTEMPTS='{raw_value}'. "
+            f"Using default {default} attempt."
+        )
         return default
 
 # --- Logging utility (extracted from py-pgvector-local/api.py) -------------
@@ -200,20 +232,38 @@ def log_error(stage: str, error: Exception) -> None:
 
 def safe_calculate(expression: str) -> str:
     """Evaluate a mathematical expression safely using AST parsing.
-    Supports: +, -, *, /, ** and parentheses.
+    Supports: +, -, *, /, ** and parentheses, with DoS bounds on exponentiation.
     """
     try:
-        tree = ast.parse(expression.strip(), mode="eval")
+        stripped = expression.strip()
+        if len(stripped) > _MAX_EXPR_LENGTH:
+            raise ValueError(f"Expression exceeds {_MAX_EXPR_LENGTH} characters.")
+        tree = ast.parse(stripped, mode="eval")
+
         def _eval(node):
             match node:
-                case ast.Constant(value=v) if isinstance(v, int | float):
+                case ast.Constant(value=v) if (
+                    isinstance(v, int | float) and not isinstance(v, bool)
+                ):
                     return v
-                case ast.BinOp(left=left, op=op, right=right) if type(op) in _SAFE_OPERATORS:
-                    return _SAFE_OPERATORS[type(op)](_eval(left), _eval(right))
-                case ast.UnaryOp(op=op, operand=operand) if type(op) in _SAFE_OPERATORS:
+                case ast.BinOp(left=left, op=op, right=right) if (
+                    type(op) in _SAFE_OPERATORS
+                ):
+                    left_val = _eval(left)
+                    right_val = _eval(right)
+                    if isinstance(op, ast.Pow) and (
+                        abs(float(left_val)) > _MAX_POW_BASE
+                        or abs(float(right_val)) > _MAX_POW_EXP
+                    ):
+                        raise ValueError("Exponentiation operands exceed safe limits.")
+                    return _SAFE_OPERATORS[type(op)](left_val, right_val)
+                case ast.UnaryOp(op=op, operand=operand) if (
+                    type(op) in _SAFE_OPERATORS
+                ):
                     return _SAFE_OPERATORS[type(op)](_eval(operand))
                 case _:
                     raise ValueError(f"Unsupported expression: {ast.dump(node)}")
+
         result = _eval(tree.body)
         return str(result)
     except (ValueError, ZeroDivisionError, SyntaxError, OverflowError) as e:
