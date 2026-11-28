@@ -220,7 +220,11 @@ $MenuItems = [ordered]@{
     "18" = @{ Action = "clean";        Category = "Workspace Maintenance";          Desc = "Safely Prune node_modules & pycache to clean c:\src and d:\src" }
     "19" = @{ Action = "credits";    Category = "Workspace Maintenance";          Desc = "Check API Credit Balances for OpenAI, Gemini & OpenRouter" }
     "20" = @{ Action = "setup";        Category = "Workspace Maintenance";          Desc = "Verify & Install Python/Node Dependencies" }
-    "21" = @{ Action = "help";         Category = "Workspace Maintenance";          Desc = "Display Reference Guide & Help" }
+    "21" = @{ Action = "help";             Category = "Workspace Maintenance";          Desc = "Display Reference Guide & Help" }
+
+    "22" = @{ Action = "skillguard-scan";  Category = "SkillGuard";                     Desc = "Scan Discovered Global & Project Skills" }
+    "23" = @{ Action = "skillguard-check"; Category = "SkillGuard";                     Desc = "Check Skill Conflicts & Predict Problems" }
+    "24" = @{ Action = "skillguard-ui";    Category = "SkillGuard";                     Desc = "Launch SkillGuard Web Dashboard (:8765)" }
 }
 
 function Show-Header {
@@ -235,21 +239,16 @@ function Show-InteractiveMenu {
     Show-Header "Workspace Orchestrator - Interactive Menu" "Cyan"
     Write-Host "Select an option by entering its number, or type the command name directly.`n" -ForegroundColor DarkGray
 
-    $currentCategory = ""
     foreach ($entry in $MenuItems.GetEnumerator()) {
         $key = $entry.Key
         $item = $entry.Value
-        if ($item.Category -ne $currentCategory) {
-            $currentCategory = $item.Category
-            Write-Host "[$currentCategory]" -ForegroundColor Yellow
-        }
         $numStr = "[$($key.PadLeft(2))]".PadRight(6)
-        $actionStr = "$($item.Action)".PadRight(13)
+        $actionStr = "$($item.Action)".PadRight(17)
         Write-Host "  $numStr" -ForegroundColor Cyan -NoNewline
         Write-Host " $actionStr" -ForegroundColor DarkCyan -NoNewline
         Write-Host " : $($item.Desc)" -ForegroundColor White
     }
-    Write-Host "`n  [ 0]   quit          : Exit menu`n" -ForegroundColor DarkGray
+    Write-Host "`n  [ 0]   quit              : Exit menu`n" -ForegroundColor DarkGray
 }
 
 function Show-Help {
@@ -1147,6 +1146,48 @@ function Invoke-WorkspaceAction {
         }
 
         Write-Host "`nWorkspace environment setup finished!" -ForegroundColor Green
+    }
+
+    # -------------------------------------------------------------
+    # SkillGuard
+    # -------------------------------------------------------------
+    { $_ -in "skillguard-scan" } {
+        Show-Header "SkillGuard - Scanning Skills" "Cyan"
+        Push-Location $PSScriptRoot
+        $prevPyPath = $env:PYTHONPATH
+        $env:PYTHONPATH = "$PSScriptRoot\src"
+        try {
+            & $PythonCmd -m skillguard.cli scan @Arguments
+        } finally {
+            $env:PYTHONPATH = $prevPyPath
+            Pop-Location
+        }
+    }
+
+    { $_ -in "skillguard-check" } {
+        Show-Header "SkillGuard - Checking Conflicts & Predictions" "Cyan"
+        Push-Location $PSScriptRoot
+        $prevPyPath = $env:PYTHONPATH
+        $env:PYTHONPATH = "$PSScriptRoot\src"
+        try {
+            & $PythonCmd -m skillguard.cli check @Arguments
+        } finally {
+            $env:PYTHONPATH = $prevPyPath
+            Pop-Location
+        }
+    }
+
+    { $_ -in "skillguard-ui" } {
+        Show-Header "SkillGuard - Web Dashboard (:8765)" "Cyan"
+        Push-Location $PSScriptRoot
+        $prevPyPath = $env:PYTHONPATH
+        $env:PYTHONPATH = "$PSScriptRoot\src"
+        try {
+            & $PythonCmd -m skillguard.cli ui @Arguments
+        } finally {
+            $env:PYTHONPATH = $prevPyPath
+            Pop-Location
+        }
     }
 
     # -------------------------------------------------------------
