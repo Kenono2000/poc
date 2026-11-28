@@ -19,8 +19,6 @@
     .\poc\run.ps1 mcp-eval-ui     # Run FastMCP Evaluate UI (interactive tool evaluation)
     .\poc\run.ps1 test            # Run offline pytest suite (130 tests)
     .\poc\run.ps1 ingest          # Run document ingestion pipeline
-    .\poc\run.ps1 docker-up       # Start Postgres 16 (pgvector) + Jaeger Badger
-    .\poc\run.ps1 docker-down     # Stop docker compose services
     .\poc\run.ps1 studio          # Launch Abyssium Studio Vite dev server (:5173)
     .\poc\run.ps1 build           # Build Abyssium Studio production bundle
     .\poc\run.ps1 lint            # Run Abyssium Studio ESLint validation
@@ -90,7 +88,7 @@ $GlobalKnownServices = @{
 }
 
 # Processes to always skip from active inspection/shutdown
-$GlobalSkipProcesses = @("system", "onedrive", "antigravity", "com.docker.backend")
+$GlobalSkipProcesses = @("system", "onedrive", "antigravity", "com.docker.backend", "wslrelay", "vpnkit", "docker", "dockerd", "docker-proxy")
 
 function Get-ActiveLabeled4DigitPorts {
     $portMap = @{}
@@ -196,35 +194,29 @@ function Get-ActiveLabeled4DigitPorts {
 
 # Menu definition mapping numbers to actions and descriptions
 $MenuItems = [ordered]@{
-    "1"  = @{ Action = "start-all";    Category = "Quick Start";                    Desc = "Auto-start API, Web App, MCP UI & Abyssium Studio" }
-    "2"  = @{ Action = "stop-all";     Category = "Quick Start";                    Desc = "Stop Background Jobs & Shut Down Active Ports" }
-    "3"  = @{ Action = "open-urls";    Category = "Quick Start";                    Desc = "Open Active Web Dashboards in Browser" }
+    "1"  = @{ Action = "start-all";        Category = "Main";        Desc = "Auto-start API, Web App, MCP UI & Abyssium Studio" }
+    "2"  = @{ Action = "stop-all";         Category = "Main";        Desc = "Stop Background Jobs & Shut Down Active Ports" }
+    "3"  = @{ Action = "studio";           Category = "Main";        Desc = "Start Vite Dev Server (:5173)" }
+    "4"  = @{ Action = "ui";               Category = "Main";        Desc = "Start Streamlit UI (streamlit on :8501)" }
+    "5"  = @{ Action = "api";              Category = "Main";        Desc = "Start FastAPI Backend (uvicorn on :8000)" }
+    "6"  = @{ Action = "mcp-ui";           Category = "Main";        Desc = "Start FastMCP Inspector / Evaluate UI (Local Testing)" }
+    "7"  = @{ Action = "ports";            Category = "Main";        Desc = "Find and Display Active Labeled 4-Digit Ports" }
+    "8"  = @{ Action = "status";           Category = "Main";        Desc = "Workspace Status, Ports, Git & Container Overview" }
+    "9"  = @{ Action = "skillguard-scan";  Category = "Main";        Desc = "Scan Discovered Global & Project Skills" }
+    "10" = @{ Action = "skillguard-check"; Category = "Main";        Desc = "Check Skill Conflicts & Predict Problems" }
+    "11" = @{ Action = "skillguard-ui";    Category = "Main";        Desc = "Launch SkillGuard Web Dashboard (:8765)" }
 
-    "4"  = @{ Action = "status";       Category = "Workspace Diagnostics & Health"; Desc = "Workspace Status, Ports, Git & Container Overview" }
-    "5"  = @{ Action = "ports";        Category = "Workspace Diagnostics & Health"; Desc = "Find and Display Active Labeled 4-Digit Ports" }
-    "6"  = @{ Action = "healthz";      Category = "Workspace Diagnostics & Health"; Desc = "Run Automated Health Check on Running Services" }
-
-    "7"  = @{ Action = "studio";       Category = "Abyssium Studio";                Desc = "Start Vite Dev Server (:5173)" }
-
-    "8"  = @{ Action = "ui";           Category = "Enterprise RAG Stack";           Desc = "Start Streamlit UI (streamlit on :8501)" }
-    "9"  = @{ Action = "api";          Category = "Enterprise RAG Stack";           Desc = "Start FastAPI Backend (uvicorn on :8000)" }
-    "10" = @{ Action = "mcp-ui";       Category = "Enterprise RAG Stack";           Desc = "Start FastMCP Inspector / Evaluate UI (Local Testing)" }
-    "11" = @{ Action = "mcp";          Category = "Enterprise RAG Stack";           Desc = "Start FastMCP Gateway (python -m app.mcp)" }
-    "12" = @{ Action = "test";         Category = "Enterprise RAG Stack";           Desc = "Run Pytest Suite (130 offline tests)" }
-    "13" = @{ Action = "ingest";       Category = "Enterprise RAG Stack";           Desc = "Run Document Ingestion Pipeline" }
-    "14" = @{ Action = "docker-up";    Category = "Enterprise RAG Stack";           Desc = "Start Postgres 16 (pgvector) + Jaeger" }
-    "15" = @{ Action = "docker-down";  Category = "Enterprise RAG Stack";           Desc = "Stop Docker Compose Services" }
-
-    "16" = @{ Action = "stop-ports";   Category = "Workspace Maintenance";          Desc = "Shut Down Active Processes from Option 5" }
-    "17" = @{ Action = "activate";     Category = "Workspace Maintenance";          Desc = "Show Python venv Activation Command" }
-    "18" = @{ Action = "clean";        Category = "Workspace Maintenance";          Desc = "Safely Prune node_modules & pycache to clean c:\src and d:\src" }
-    "19" = @{ Action = "credits";    Category = "Workspace Maintenance";          Desc = "Check API Credit Balances for OpenAI, Gemini & OpenRouter" }
-    "20" = @{ Action = "setup";        Category = "Workspace Maintenance";          Desc = "Verify & Install Python/Node Dependencies" }
-    "21" = @{ Action = "help";             Category = "Workspace Maintenance";          Desc = "Display Reference Guide & Help" }
-
-    "22" = @{ Action = "skillguard-scan";  Category = "SkillGuard";                     Desc = "Scan Discovered Global & Project Skills" }
-    "23" = @{ Action = "skillguard-check"; Category = "SkillGuard";                     Desc = "Check Skill Conflicts & Predict Problems" }
-    "24" = @{ Action = "skillguard-ui";    Category = "SkillGuard";                     Desc = "Launch SkillGuard Web Dashboard (:8765)" }
+    "12" = @{ Action = "open-urls";        Category = "Maintenance"; Desc = "Open Active Web Dashboards in Browser" }
+    "13" = @{ Action = "healthz";          Category = "Maintenance"; Desc = "Run Automated Health Check on Running Services" }
+    "14" = @{ Action = "mcp";              Category = "Maintenance"; Desc = "Start FastMCP Gateway (python -m app.mcp)" }
+    "15" = @{ Action = "test";             Category = "Maintenance"; Desc = "Run Pytest Suite (130 offline tests)" }
+    "16" = @{ Action = "ingest";           Category = "Maintenance"; Desc = "Run Document Ingestion Pipeline" }
+    "17" = @{ Action = "stop-ports";       Category = "Maintenance"; Desc = "Shut Down Active Processes from Option 7" }
+    "18" = @{ Action = "activate";         Category = "Maintenance"; Desc = "Show Python venv Activation Command" }
+    "19" = @{ Action = "clean";            Category = "Maintenance"; Desc = "Safely Prune node_modules & pycache to clean c:\src and d:\src" }
+    "20" = @{ Action = "credits";          Category = "Maintenance"; Desc = "Check API Credit Balances for OpenAI, Gemini & OpenRouter" }
+    "21" = @{ Action = "setup";            Category = "Maintenance"; Desc = "Verify & Install Python/Node Dependencies" }
+    "22" = @{ Action = "help";             Category = "Maintenance"; Desc = "Display Reference Guide & Help" }
 }
 
 function Show-Header {
@@ -239,9 +231,15 @@ function Show-InteractiveMenu {
     Show-Header "Workspace Orchestrator - Interactive Menu" "Cyan"
     Write-Host "Select an option by entering its number, or type the command name directly.`n" -ForegroundColor DarkGray
 
+    $lastCat = ""
     foreach ($entry in $MenuItems.GetEnumerator()) {
         $key = $entry.Key
         $item = $entry.Value
+        if ($item.Category -ne $lastCat) {
+            if ($lastCat -ne "") { Write-Host "" }
+            Write-Host "$($item.Category)" -ForegroundColor Yellow
+            $lastCat = $item.Category
+        }
         $numStr = "[$($key.PadLeft(2))]".PadRight(6)
         $actionStr = "$($item.Action)".PadRight(17)
         Write-Host "  $numStr" -ForegroundColor Cyan -NoNewline
@@ -274,8 +272,6 @@ function Show-Help {
     Write-Host "  mcp-eval-ui        Start FastMCP Evaluate UI (alias for mcp-ui)"
     Write-Host "  test, rag-test     Run pytest test suite (accepts pytest args, e.g. -k rbac)"
     Write-Host "  ingest, rag-ingest Run data ingestion pipeline (python scripts/ingest.py)"
-    Write-Host "  db, docker-up      Start PostgreSQL 16 (pgvector) + Jaeger (docker compose up -d)"
-    Write-Host "  docker-down        Stop docker compose services"
 
     Write-Host "`nAbyssium Studio (abyssium-studio):" -ForegroundColor Green
     Write-Host "  studio, web        Start Vite dev server (npm run dev on :5173)"
@@ -501,58 +497,44 @@ function Invoke-WorkspaceAction {
         Show-Header "Starting FastAPI Gateway (Port 8000)" "Green"
         Write-Host "Docs: http://localhost:8000/docs" -ForegroundColor Cyan
         Write-Host "Health: http://localhost:8000/healthz | http://localhost:8000/readyz`n" -ForegroundColor DarkGray
-        Push-Location "$WorkspaceRoot\enterprise-rag-pgvector-rbac"
-        try {
-            & $PythonCmd -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload @ExtraArgs
-        } finally {
-            Pop-Location
-        }
+        $workDir = "$WorkspaceRoot\enterprise-rag-pgvector-rbac"
+        $extra = ($ExtraArgs | ForEach-Object { "'$_'" }) -join " "
+        Start-Process powershell -WorkingDirectory $workDir -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", "& '$PythonCmd' -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload $extra"
+        Write-Host "[OK] FastAPI Gateway launched in background window." -ForegroundColor Green
     }
 
     { $_ -in "rag-ui", "streamlit", "ui" } {
         Show-Header "Starting Streamlit UI (Port 8501)" "Green"
         Write-Host "URL: http://localhost:8501`n" -ForegroundColor Cyan
-        Push-Location "$WorkspaceRoot\enterprise-rag-pgvector-rbac"
-        try {
-            & $PythonCmd -m streamlit run streamlit_app.py --server.port 8501 --server.headless true --server.runOnSave true @ExtraArgs
-        } finally {
-            Pop-Location
-        }
+        $workDir = "$WorkspaceRoot\enterprise-rag-pgvector-rbac"
+        $extra = ($ExtraArgs | ForEach-Object { "'$_'" }) -join " "
+        Start-Process powershell -WorkingDirectory $workDir -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", "& '$PythonCmd' -m streamlit run streamlit_app.py --server.port 8501 --server.headless true --server.runOnSave true $extra"
+        Write-Host "[OK] Streamlit UI launched in background window." -ForegroundColor Green
     }
 
     { $_ -in "rag-mcp", "mcp" } {
         Show-Header "Starting FastMCP Gateway" "Green"
-        Push-Location "$WorkspaceRoot\enterprise-rag-pgvector-rbac"
-        try {
-            & $PythonCmd -m watchfiles "$PythonCmd -m app.mcp $ExtraArgs" app/mcp
-        } finally {
-            Pop-Location
-        }
+        $workDir = "$WorkspaceRoot\enterprise-rag-pgvector-rbac"
+        $extra = $ExtraArgs -join " "
+        Start-Process powershell -WorkingDirectory $workDir -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", "& '$PythonCmd' -m watchfiles `"$PythonCmd -m app.mcp $extra`" app/mcp"
+        Write-Host "[OK] FastMCP Gateway launched in background window." -ForegroundColor Green
     }
 
     { $_ -in "rag-mcp-ui", "mcp-ui", "mcp-dev", "inspector", "mcp-inspector", "mcp-eval-ui", "mcp-evaluate-ui", "mcp-eval", "mcp-evaluate", "evaluate-ui", "eval-ui", "mcp evaluate ui", "mcp eval ui" } {
         Show-Header "Starting FastMCP Inspector & Evaluate UI (Local Testing)" "Green"
         Write-Host "Interactive UI for testing and evaluating FastMCP tools, schemas, and RBAC policies." -ForegroundColor Cyan
         Write-Host "Server Target: SDLC-Harness-Gateway (app/mcp/gateway.py:mcp)`n" -ForegroundColor DarkGray
-        Push-Location "$WorkspaceRoot\enterprise-rag-pgvector-rbac"
-        $prevAutoOpen = $env:MCP_AUTO_OPEN_ENABLED
-        $env:MCP_AUTO_OPEN_ENABLED = "false"
-        try {
-            if (Test-Path $VenvFastMcp) {
-                & $VenvFastMcp dev inspector app/mcp/gateway.py:mcp @ExtraArgs
-            } elseif (Test-Path $VenvMcp) {
-                & $VenvMcp dev app/mcp/gateway.py:mcp @ExtraArgs
-            } else {
-                npx -y @modelcontextprotocol/inspector $PythonCmd -m app.mcp @ExtraArgs
-            }
-        } finally {
-            if ($null -eq $prevAutoOpen) {
-                Remove-Item Env:MCP_AUTO_OPEN_ENABLED -ErrorAction SilentlyContinue
-            } else {
-                $env:MCP_AUTO_OPEN_ENABLED = $prevAutoOpen
-            }
-            Pop-Location
+        $workDir = "$WorkspaceRoot\enterprise-rag-pgvector-rbac"
+        $extra = ($ExtraArgs | ForEach-Object { "'$_'" }) -join " "
+        if (Test-Path $VenvFastMcp) {
+            $mcpCmd = "`$env:MCP_AUTO_OPEN_ENABLED = 'false'; & '$VenvFastMcp' dev inspector app/mcp/gateway.py:mcp $extra"
+        } elseif (Test-Path $VenvMcp) {
+            $mcpCmd = "`$env:MCP_AUTO_OPEN_ENABLED = 'false'; & '$VenvMcp' dev app/mcp/gateway.py:mcp $extra"
+        } else {
+            $mcpCmd = "`$env:MCP_AUTO_OPEN_ENABLED = 'false'; npx -y @modelcontextprotocol/inspector '$PythonCmd' -m app.mcp $extra"
         }
+        Start-Process powershell -WorkingDirectory $workDir -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", $mcpCmd
+        Write-Host "[OK] FastMCP Inspector & Evaluate UI launched in background window." -ForegroundColor Green
     }
 
     { $_ -in "rag-test", "test" } {
@@ -598,41 +580,15 @@ function Invoke-WorkspaceAction {
         }
     }
 
-    { $_ -in "docker-up", "db" } {
-        Show-Header "Starting PostgreSQL 16 (pgvector) + Jaeger Badger" "Green"
-        Push-Location "$WorkspaceRoot\enterprise-rag-pgvector-rbac"
-        try {
-            docker compose up -d
-            Write-Host "`nPostgres: localhost:5432 (enterprise_rag)" -ForegroundColor Cyan
-            Write-Host "Jaeger UI: http://localhost:16686" -ForegroundColor Cyan
-            Write-Host "Jaeger OTLP gRPC: localhost:4317" -ForegroundColor Cyan
-        } finally {
-            Pop-Location
-        }
-    }
-
-    "docker-down" {
-        Show-Header "Stopping Docker Compose Services" "Yellow"
-        Push-Location "$WorkspaceRoot\enterprise-rag-pgvector-rbac"
-        try {
-            docker compose down
-        } finally {
-            Pop-Location
-        }
-    }
-
     # -------------------------------------------------------------
     # Abyssium Studio
     # -------------------------------------------------------------
     { $_ -in "studio-dev", "studio", "web" } {
         Show-Header "Starting Abyssium Studio (Port 5173)" "Magenta"
         Write-Host "URL: http://localhost:5173`n" -ForegroundColor Cyan
-        Push-Location "$WorkspaceRoot\abyssium-studio"
-        try {
-            npm run dev
-        } finally {
-            Pop-Location
-        }
+        $workDir = "$WorkspaceRoot\abyssium-studio"
+        Start-Process powershell -WorkingDirectory $workDir -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", "npm run dev"
+        Write-Host "[OK] Abyssium Studio launched in background window." -ForegroundColor Green
     }
 
     { $_ -in "studio-build", "build" } {
@@ -662,12 +618,10 @@ function Invoke-WorkspaceAction {
         Show-Header "Auto-Launching Core Services" "Green"
         Write-Host "Starting: FastAPI API, Streamlit Web App, FastMCP Inspector UI, Abyssium Studio`n" -ForegroundColor DarkGray
 
-        $scriptPath = Join-Path $ScriptDir "run.ps1"
-
-        Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", "& '$scriptPath' api"
-        Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", "& '$scriptPath' ui"
-        Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", "& '$scriptPath' mcp-ui"
-        Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", "& '$scriptPath' studio"
+        Invoke-WorkspaceAction -TargetAction "api" -Arguments @()
+        Invoke-WorkspaceAction -TargetAction "ui" -Arguments @()
+        Invoke-WorkspaceAction -TargetAction "mcp-ui" -Arguments @()
+        Invoke-WorkspaceAction -TargetAction "studio" -Arguments @()
 
         Write-Host "All four services launched in separate console windows." -ForegroundColor Green
         Write-Host "  API:        http://localhost:8000" -ForegroundColor Cyan
